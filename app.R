@@ -617,7 +617,7 @@ updateFx<-function(){
     sql,
     params = list(cutoff)
   )
-  print(new_mastersheet_rows)
+  print(new_mastersheet_rows[seq(1,4),])
   # ## Load data from database
   # match_table <- dbReadTable(con, "mastersheet")   # equivalent to SELECT * FROM "mastersheet"
   # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
