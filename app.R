@@ -603,6 +603,7 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
+  print("running update fx...")
   ## Load limited table from db:
   cutoff <- as.POSIXct("2026-06-01 00:00:00", tz = "UTC")
   sql <- "
