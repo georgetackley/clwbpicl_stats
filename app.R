@@ -726,6 +726,7 @@ updateFx<-function(){
   # 
   # ## REPLACE match_table_long:
   # db_replace_table("match_table_long",match_table_long)
+  return(NULL)
 }
 #updateFx()
 
@@ -736,7 +737,7 @@ server <- function(input, output) {
   }) %>% bindEvent(input$update)
   
   output$time_string <- renderText({
-    paste("... Update completed at: ", as.character(floor_date(ymd_hms(Sys.time()))))
+    #paste("... Update completed at: ", as.character(floor_date(ymd_hms(Sys.time()))))
     run_update()
   })
 }
