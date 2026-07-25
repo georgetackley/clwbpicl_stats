@@ -605,7 +605,7 @@ con<-connectDB()
 updateFx<-function(){
   print("running update fx...")
   ## Load limited table from db:
-  cutoff <- as.POSIXct("2026-06-01 00:00:00", tz = "UTC")
+  cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
   sql <- "
   SELECT *
   FROM mastersheet
@@ -617,6 +617,7 @@ updateFx<-function(){
     sql,
     params = list(cutoff)
   )
+  print(new_mastersheet_rows)
   # ## Load data from database
   # match_table <- dbReadTable(con, "mastersheet")   # equivalent to SELECT * FROM "mastersheet"
   # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
