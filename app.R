@@ -686,18 +686,20 @@ updateFx<-function(){
   print(match_table_long[c(1:4),])
   
    
-  # ## Rank tables
-  # # Create table of ranks with all players as 3.000:
-  # rank_table<-data.frame(ID=player_list,rank=3)
+  # ## 4DR Rank tables
+  # # Create table of 4DR ranks with all players as 3.000:
+  rank_table<-data.frame(ID=player_list,rank=3)
   # 
-  # # Merge with historical ranks to replace '3.000's where known ('init_4dr_table')
-  # for(id in 1:nrow(init_4dr_table)){
-  #   rank_table$rank[rank_table$ID %in% init_4dr_table$name[id]] <- init_4dr_table$rank[id]
-  # }
-  # 
+  # # Merge with historical ranks to replace '3.000's where known
+  for(id in 1:nrow(init_4dr_table)){
+    rank_table$rank[rank_table$ID %in% current_4drs$name[id]] <- current_4drs$rank[id]
+  }
+  
   # # Ensure ranks are numeric
-  # rank_table$rank<-as.numeric(rank_table$rank)
-  # 
+  rank_table$rank<-as.numeric(rank_table$rank)
+  print("The ranks ...")
+  print(rank_table)
+   
   # ## Add 'adjusted score' column to 'match_table_long' for traditional ladders:
   # # maximum (i.e. smallest!) fraction by which points are down-adjusted
   # max_adj_factor<-0.8
