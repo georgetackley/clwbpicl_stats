@@ -736,7 +736,8 @@ server <- function(input, output) {
   }) %>% bindEvent(input$update)
   
   output$time_string <- renderText({
-    paste("... Update completed at: ", as.character(floor_date(ymd_hms(Sys.time()))),run_update())
+    paste("... Update completed at: ", as.character(floor_date(ymd_hms(Sys.time()))))
+    run_update()
   })
 }
 
