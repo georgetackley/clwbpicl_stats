@@ -635,7 +635,7 @@ updateFx<-function(){
   
   # # Find number of games(=rows) in new_mastersheet_rows:
   game_max<-nrow(new_mastersheet_rows)
-  # 
+  
   # # Create empty data.frame to store results in 'long' format (i.e. one row per player per game)
   match_table_long <- data.frame(ID=character(),
                                  date_time=as.Date(character()), #update to 'date_time' 19032026
@@ -698,31 +698,16 @@ updateFx<-function(){
   # # Ensure ranks are numeric
   rank_table$rank<-as.numeric(rank_table$rank)
   print("The ranks ...")
-  print(rank_table)
+  print(rank_table[c(1:10),])
    
-  # ## Add 'adjusted score' column to 'match_table_long' for traditional ladders:
-  # # maximum (i.e. smallest!) fraction by which points are down-adjusted
-  # max_adj_factor<-0.8
-  # match_table_long$score_side_adj<-NA
-  # # calculate adjusted scores from court 'levels' (0=courts not assigned levels)
-  # for (i in 1:game_max){
-  #   if (match_table_long[match_table_long$game==i,]$court_rank[1] == 0){
-  #     match_table_long[match_table_long$game==i,]$score_side_adj<-
-  #       match_table_long[match_table_long$game==i,]$score_side
-  #   } else {
-  #     match_table_long[match_table_long$game==i,]$score_side_adj<-
-  #       match_table_long[match_table_long$game==i,]$score_side *
-  #       (1-((match_table_long[match_table_long$game==i,]$court_rank-1)*
-  #             ((1-max_adj_factor)/(match_table_long[match_table_long$game==i,]$no_of_courts-1))))
-  #   }
-  # }
-  # 
-  # 
+  
   # ## Run 4DR calculation
-  # fourDR_returns<-fourDRCalc_zeroSum(rank_table,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
-  # rank_table<-fourDR_returns$ranks
-  # sequential_ranks<-fourDR_returns$seqRanks
-  # 
+  fourDR_returns<-fourDRCalc_zeroSum(rank_table,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
+  rank_table<-fourDR_returns$ranks
+  sequential_ranks<-fourDR_returns$seqRanks
+  print("New ranks ...")
+  print(rank_table[c(1:10),])
+   
   # ## UPSERT ranks:
   # rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   # db_upsert("4DR_current",rank_table,c("name","rank"),"name")
