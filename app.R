@@ -691,7 +691,7 @@ updateFx<-function(){
   rank_table<-data.frame(ID=player_list,rank=3)
   # 
   # # Merge with historical ranks to replace '3.000's where known
-  for(id in 1:nrow(init_4dr_table)){
+  for(id in 1:nrow(current_4drs)){
     rank_table$rank[rank_table$ID %in% current_4drs$name[id]] <- current_4drs$rank[id]
   }
   
