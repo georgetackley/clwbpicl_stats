@@ -603,7 +603,7 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
-  print("running update fx...")
+  print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
   cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
   sql <- "
@@ -617,7 +617,9 @@ updateFx<-function(){
     sql,
     params = list(cutoff)
   )
+  print("... first four rows are:")
   print(new_mastersheet_rows[seq(1,4),])
+  
   # ## Load data from database
   # match_table <- dbReadTable(con, "mastersheet")   # equivalent to SELECT * FROM "mastersheet"
   # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
