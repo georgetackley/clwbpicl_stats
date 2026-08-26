@@ -606,7 +606,8 @@ updateFx<-function(){
   # Load latest 4DR-init update date:
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
   print("Latest 4DR-init update date: ")
-  print(init_date$table_4DR_init_updated)
+  init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
+  print(init_4DR_update_date)
   
   
   # Load initialiser 4DRs:
