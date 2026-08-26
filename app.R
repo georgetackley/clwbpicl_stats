@@ -603,6 +603,17 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
+  # Load latest 4DR-init update date:
+  init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
+  print("Latest 4DR-init update date: ")
+  print(init_date$table_4DR_init_updated)
+  
+  
+  # Load initialiser 4DRs:
+  init_4drs<-dbReadTable(con, "4DR_init")
+  print("First four init 4DRs ... ")
+  print(init_4drs[c(1:4),])
+  
   print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
   cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
@@ -624,6 +635,7 @@ updateFx<-function(){
   # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
   
   current_4drs<-dbReadTable(con, "4DR_current")
+  print("... first four current 4DRs are:")
   print(current_4drs[c(1:4),])
   
   # # Format data and sort-by date
