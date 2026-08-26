@@ -614,13 +614,23 @@ updateFx<-function(){
   print("First four init 4DRs ... ")
   print(init_4drs[c(1:4),])
   
-  # Determine date-range between latest 4DR init table update and 7 days ago
-  current_date<-as.POSIXct(Sys.Date())
-  seven_days_date<-current_date-604800 # The no. of seconds in a week!
+  # Store other date variables
+  current_date<-as.POSIXct(Sys.Date())+1 # The '+1' forces it to store hhmmss data
+  seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
   print("Current date ...")
   print(current_date)
   print("Date a week ago ...")
   print(seven_days_date)
+  
+  # Compare seven days ago date with 4DR init latest update date:
+  if (as.Date(init_4DR_update_date)<as.Date(seven_days_date)){
+    print("Updated longer ago than 7 days ... ")
+    print(paste0(seven_days_date-init_4DR_update_date,"s to be exact!"))
+    # ... run update script for 4DR init up to 23:59 on seven_days_date
+    # ... and save 4DR init values
+  }
+  
+  # Then run update from date after 7 days before, i.e. seven_days_date+(24*60*60)+1
   
   print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
@@ -742,6 +752,8 @@ updateFx<-function(){
   # ## REPLACE match_table_long:
   # db_replace_table("match_table_long",match_table_long)
   return(NULL)
+  
+  ### Don't forget to update the date parameters table!
 }
 #updateFx()
 
