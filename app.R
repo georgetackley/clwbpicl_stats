@@ -609,15 +609,23 @@ updateFx<-function(){
   init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
   print(init_4DR_update_date)
   
-  
   # Load initialiser 4DRs:
   init_4drs<-dbReadTable(con, "4DR_init")
   print("First four init 4DRs ... ")
   print(init_4drs[c(1:4),])
   
+  # Determine date-range between latest 4DR init table update and 7 days ago
+  current_date<-as.POSIXct(Sys.Date())
+  seven_days_date<-current_date-604800 # The no. of seconds in a week!
+  print("Current date ...")
+  print(current_date)
+  print("Date a week ago ...")
+  print(seven_days_date)
+  
   print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
-  cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
+  #cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
+  cutoff <- seven_days_date
   sql <- "
   SELECT *
   FROM mastersheet
