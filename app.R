@@ -651,8 +651,11 @@ updateFx<-function(){
     print(pre_seven_mastersheet_rows[seq(1,4),])
   }
   
+  # NEED TO UPDATE THE 4DR_init table here
+  # AS WELL as the 4DR_init date (to the "seven_days_date+(24*60*60)-1") in the parameter table
   # Then run update from date after 7 days before, i.e. seven_days_date+(24*60*60)+1:
   
+  ## RUN update of 4DRs from last week's data:
   print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
   #cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
