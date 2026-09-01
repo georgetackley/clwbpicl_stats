@@ -701,6 +701,8 @@ updateFx<-function(){
   seq_rank_init_4drs<-dbReadTable(con, "seq_ranks_init")
   print("First four init 4DRs ... ")
   print(init_4drs[c(1:4),])
+  print("First four sequential 4DRs ... ")
+  print(seq_rank_init_4drs[c(1:4),])
   
   # Store other date variables
   current_date<-as.POSIXct(Sys.time())+1 # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
