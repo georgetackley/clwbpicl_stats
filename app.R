@@ -882,7 +882,7 @@ updateFx<-function(){
   print("New ranks ...")
   print(rank_table[c(1:10),])
   print("Sequential ranks ...")
-  print(sequential_ranks[c(1:100),])
+  print(sequential_ranks[sequential_ranks$ID=="George Tackley",])
   
   
   
