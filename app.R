@@ -698,11 +698,18 @@ updateFx<-function(){
   
   # Load initialiser 4DR tables:
   init_4drs<-dbReadTable(con, "4DR_init")
-  seq_rank_init_4drs<-dbReadTable(con, "seq_ranks_init")
+  seq_rank_init<-dbReadTable(con, "seq_ranks_init")
   print("First four init 4DRs ... ")
   print(init_4drs[c(1:4),])
   print("First four sequential 4DRs ... ")
-  print(seq_rank_init_4drs[c(1:4),])
+  print(seq_rank_init[c(1:4),])
+  
+  # To make the init rank table, just use the seq_rank_table, filter by date, group by name, and use max date per rank
+  rank_table_init<-
+    seq_ranks[seq_ranks$date_time<=seven_days_date,] %>% group_by(name) %>% 
+    summarise(date_time = max(date_time))
+  print("First four in NEW generated init 4DRs ... ")
+  print(rank_table_init[c(1:4),])
   
   # Store other date variables
   current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
@@ -814,24 +821,28 @@ updateFx<-function(){
   
   
   # ## Run 4DR calculation to update WEEK OLD and OLDER data:
-  fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init_4drs,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
+  fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
   rank_table<-fourDR_returns$ranks
   # Convert seq ranks date back to DB table column names:
   seq_ranks_tmp<-fourDR_returns$seqRanks
-  seq_rank_init_4drs<-data.frame(name=seq_ranks_tmp$ID,
+  seq_ranks<-data.frame(name=seq_ranks_tmp$ID,
                                  rank=seq_ranks_tmp$rank4dr,
                                  date_time=seq_ranks_tmp$date_time)
   
   print("New ranks ...")
   print(rank_table[c(1:10),])
   
+  rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
+  
+  
   #### Update 4DR_init table FOR THIS FILTER BY DATE <= 7d ago
   if(nrow(all_rows[all_rows$date_time<seven_days_date,]) > 0){
     print("There are some pre-rows to upload ...")
     print(nrow(all_rows[all_rows$date_time<seven_days_date,]))
+    #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
   }
-  rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
-  #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
+  
+  
   
   #### Update seq_ranks_init table
   # ## REPLACE sequential ranks:
@@ -840,7 +851,7 @@ updateFx<-function(){
   #                           date_time=sequential_ranks$date_time)
   # db_replace_table("sequential_ranks",seq_ranks_tmp)
   # 
-  new_seq_ranks<-seq_rank_init_4drs[seq_rank_init_4drs$date_time>init_4DR_update_date,] # Only seq ranks since last update
+  new_seq_ranks<-seq_rank_init[seq_rank_inits$date_time>init_4DR_update_date,] # Only seq ranks since last update
   
   ####
   print("Rank rows to be added to seq_ranks_init: ")
