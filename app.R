@@ -615,7 +615,7 @@ updateFx<-function(){
   print(init_4drs[c(1:4),])
   
   # Store other date variables
-  current_date<-as.POSIXct(Sys.Date())+1 # The '+1' forces it to store hhmmss data
+  current_date<-as.POSIXct(Sys.time())+1 # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
   seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
   print("Current date ...")
   print(current_date)
