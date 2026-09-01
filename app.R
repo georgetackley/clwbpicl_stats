@@ -416,7 +416,7 @@ fourDRCalc_zeroSum<-function(rank_table,seq_rank_table,game_max,match_table_long
   ## Initialise table to collect sequential 4DR ranks:
   #sequential_ranks<-data.frame(ID=character(),rank4dr=numeric(),date_time=ymd_hms(),
   #                             stringsAsFactors=FALSE)
-  sequential_ranks<-seq_rank_table
+  sequential_ranks<-data.frame(ID=seq_rank_table$name,rank4dr=seq_rank_table$rank,date_time=seq_rank_table$date_time)
   
   for (i in 1:game_max){
     # Create tmp copy of rank table for function:
