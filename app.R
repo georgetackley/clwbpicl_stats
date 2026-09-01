@@ -796,7 +796,7 @@ updateFx<-function(){
   # match_table <- dbReadTable(con, "mastersheet")   # equivalent to SELECT * FROM "mastersheet"
   # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
   
-  seven_day_4drs<-dbReadTable(con, "init_4drs")
+  seven_day_4drs<-dbReadTable(con, "4DR_init")
   #print("... first four current 4DRs are:")
   #print(current_4drs[c(1:4),])
   
