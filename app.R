@@ -705,7 +705,7 @@ updateFx<-function(){
   print(seq_rank_init_4drs[c(1:4),])
   
   # Store other date variables
-  current_date<-as.POSIXct(Sys.time())+1 # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
+  current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
   seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
   print("Current date ...")
   print(current_date)
@@ -714,7 +714,9 @@ updateFx<-function(){
   
   # Days since latest 7-day ago update:
   print("Time between latest update and one week ago ... ")
-  print(paste0(seven_days_date-init_4DR_update_date,"d ago (to be exact!)"))
+  print(seven_days_date)
+  print(init_4DR_update_date)
+  print(paste0(seven_days_date-init_4DR_update_date,"d (to be exact!)"))
   
   ### Load all relevant data
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
