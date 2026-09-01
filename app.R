@@ -827,7 +827,7 @@ updateFx<-function(){
     seq_ranks_tmp<-fourDR_returns$seqRanks
     seq_rank_init_4drs<-data.frame(name=seq_ranks_tmp$ID,
                                    rank=seq_ranks_tmp$rank4dr,
-                                   date_time<-seq_ranks_tmp$date_time)
+                                   date_time=seq_ranks_tmp$date_time)
     
     print("New ranks ...")
     print(rank_table[c(1:10),])
@@ -846,9 +846,11 @@ updateFx<-function(){
     # 
     new_seq_ranks<-seq_rank_init_4drs[seq_rank_init_4drs$date_time>init_4DR_update_date,] # Only seq ranks since last update
     
+    ####
     print("Rank rows to be added to seq_ranks_init: ")
     print(new_seq_ranks[1:10,])
     #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
+    ####
     
     # ## REPLACE match_table_long:
     # db_replace_table("match_table_long",match_table_long)
