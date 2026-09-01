@@ -690,6 +690,13 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
+  # Make various date variables
+  current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
+  seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
+  print("Current date ...")
+  print(current_date)
+  print("Date a week ago ...")
+  print(seven_days_date)
   # Load latest 4DR-init update date:
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
   print("Latest 4DR-init update date: ")
@@ -710,14 +717,6 @@ updateFx<-function(){
     summarise(date_time = max(date_time))
   print("First four in NEW generated init 4DRs ... ")
   print(rank_table_init[c(1:4),])
-  
-  # Store other date variables
-  current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
-  seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
-  print("Current date ...")
-  print(current_date)
-  print("Date a week ago ...")
-  print(seven_days_date)
   
   # Days since latest 7-day ago update:
   print("Time between latest update and one week ago ... ")
