@@ -716,203 +716,34 @@ updateFx<-function(){
   print("Time between latest update and one week ago ... ")
   print(paste0(seven_days_date-init_4DR_update_date,"d ago (to be exact!)"))
   
-  ### Pre-SEVEN DAYS SCORES, i.e. ensure all 4DRS up-to-date up until 1 week ago ###
-  # Process update SQL for any rows between the '4DR init' last update date and 7 days ago
-  print("Loading un-updated rows from 'mastersheet' table ...")
-  date_begin <- init_4DR_update_date
-  date_end <- seven_days_date
+  ### Load all relevant data
+  earliest_date<-min(c(seven_days_date,init_4DR_update_date))
+  print("Loading all relevant data 'mastersheet' table ...")
+  date_begin <- earliest_date
   print("Beginning and end cut-off dates ...")
   print(date_begin)
-  print(date_end)
   
   sql <- "
             SELECT *
             FROM mastersheet
             WHERE date_time >= $1
-              AND date_time < $2
             ORDER BY date_time
           "
-  pre_seven_mastersheet_rows <- dbGetQuery(
+  all_rows <- dbGetQuery(
     con,
     sql,
-    params = list(date_begin,date_end)
+    params = list(date_begin)
   )
-  
-  if(nrow(pre_seven_mastersheet_rows)>0){
-    print("... first four pre-week rows are:")
-    print(pre_seven_mastersheet_rows[seq(1,4),])
-    
-    
-    # NEED TO UPDATE THE 4DR_init table here
-    # # Format data and sort-by date
-    pre_seven_mastersheet_rows$date_time <- ymd_hms(pre_seven_mastersheet_rows$date_time) #Convert to lubridate date/time format
-    pre_seven_mastersheet_rows <- pre_seven_mastersheet_rows %>% arrange(date_time) #Sort table by date_time
-    
-    # # Add Days of the Week:
-    pre_seven_mastersheet_rows$dow<-as.character(wday(pre_seven_mastersheet_rows$date_time, label=TRUE))
-    
-    # # Find number of games(=rows) in pre_seven_mastersheet_rows:
-    game_max<-nrow(pre_seven_mastersheet_rows)
-    
-    # # Create empty data.frame to store results in 'long' format (i.e. one row per player per game)
-    match_table_long <- data.frame(ID=character(),
-                                   date_time=as.Date(character()), #update to 'date_time' 19032026
-                                   dow=character(),
-                                   game=integer(),
-                                   partner=character(),
-                                   opp1=character(),
-                                   opp2=character(),
-                                   score_side=integer(),
-                                   score_opp=integer(),
-                                   score_method=character(),
-                                   location=character(),
-                                   indoor=integer(),
-                                   no_of_courts=integer(),
-                                   court_rank=integer(),
-                                   event_type=character(),
-                                   stringsAsFactors = FALSE)
-    
-    
-    # # Reformat to long format (see above) and store in match_table_long:
-    for (i in 1:game_max){
-      row1<-pre_seven_mastersheet_rows[i,] %>%
-        select(ID=p1,partner=p2,opp1=p3,opp2=p4,score_side=p1p2_score,score_opp=p3p4_score,score_method,
-               location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
-      row1$game<-i
-      
-      row2<-pre_seven_mastersheet_rows[i,] %>%
-        select(ID=p2,partner=p1,opp1=p3,opp2=p4,score_side=p1p2_score,score_opp=p3p4_score,score_method,
-               location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
-      row2$game<-i
-      
-      row3<-pre_seven_mastersheet_rows[i,] %>%
-        select(ID=p3,partner=p4,opp1=p1,opp2=p2,score_side=p3p4_score,score_opp=p1p2_score,score_method,
-               location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
-      row3$game<-i
-      
-      row4<-pre_seven_mastersheet_rows[i,] %>%
-        select(ID=p4,partner=p3,opp1=p1,opp2=p2,score_side=p3p4_score,score_opp=p1p2_score,score_method,
-               location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
-      row4$game<-i
-      
-      match_table_long<-bind_rows(match_table_long,row1,row2,row3,row4)
-    }
-    
-    # # Store list of all players in match_table_long:
-    player_list<-unique(match_table_long$ID)
-    
-    print("Match-table-long, first four: ")
-    print(match_table_long[c(1:4),])
-    
-    
-    # ## 4DR Rank tables
-    # # Create table of 4DR ranks with all players as 3.000:
-    rank_table<-data.frame(ID=player_list,rank=3)
-    #
-    # # Merge with historical ranks to replace '3.000's where known
-    for(id in 1:nrow(init_4drs)){
-      rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
-    }
-    
-    # # Ensure ranks are numeric
-    rank_table$rank<-as.numeric(rank_table$rank)
-    print("The ranks ...")
-    print(rank_table[c(1:10),])
-    
-    
-    # ## Run 4DR calculation
-    fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init_4drs,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
-    rank_table<-fourDR_returns$ranks
-    # Convert seq ranks date back to DB table column names:
-    seq_ranks_tmp<-fourDR_returns$seqRanks
-    seq_rank_init_4drs<-data.frame(name=seq_ranks_tmp$ID,
-                                   rank=seq_ranks_tmp$rank4dr,
-                                   date_time=seq_ranks_tmp$date_time)
-    
-    print("New ranks ...")
-    print(rank_table[c(1:10),])
-    
-    #### Update 4DR_init table
-    # ## UPSERT ranks:
-    rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
-    db_upsert("4DR_init",rank_table,c("name","rank"),"name")
-    
-    #### Update seq_ranks_init table
-    # ## REPLACE sequential ranks:
-    # seq_ranks_tmp<-data.frame(name=sequential_ranks$ID,
-    #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
-    #                           date_time=sequential_ranks$date_time)
-    # db_replace_table("sequential_ranks",seq_ranks_tmp)
-    # 
-    new_seq_ranks<-seq_rank_init_4drs[seq_rank_init_4drs$date_time>init_4DR_update_date,] # Only seq ranks since last update
-    
-    ####
-    print("Rank rows to be added to seq_ranks_init: ")
-    print(new_seq_ranks[1:10,])
-    #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
-    ####
-    
-    # ## REPLACE match_table_long:
-    # db_replace_table("match_table_long",match_table_long)
-    
-    # UPDATE the '4DR_init_updated' date (to the "seven_days_date") in the parameter table ('update_dates' table):
-    param_name<-"table_4DR_init_updated"
-    new_ts<-as.POSIXct(seven_days_date)
-    
-    sql <- "
-          UPDATE update_dates
-          SET parameter_date = $1
-          WHERE parameter_name = $2
-          RETURNING parameter_name, parameter_date;
-        "
-    
-    updated <- dbGetQuery(con, sql, params = list(new_ts, param_name))
-    
-    print("These values were updated in the DB: ...")
-    print(updated)
-  } else {
-    print("Nothing to update in 4DR-init (i.e. zero rows in 'pre_seven_mastersheet_rows' table)...")
-  }
-  
-  ### CURRENT WEEK's SCORES (i.e. the last 7 days) ###
-  ## RUN update of LAST WEEK's score (i.e. 4DRs from 'seven_days_date' onwards ... might be best to place the date variables outside the updateFx and currentFx calls
-  print("Loading LAST WEEK's rows from 'mastersheet' table ...")
-  
-  ## Load LAST WEEK's data from db:
-  cutoff_date <- seven_days_date
-  print("Cut-off date ...")
-  print(cutoff_date)
-  
-  sql <- "
-  SELECT *
-  FROM mastersheet
-  WHERE date_time > $1
-  ORDER BY date_time
-  "
-  new_mastersheet_rows <- dbGetQuery(
-    con,
-    sql,
-    params = list(cutoff_date)
-  )
-  print("... first four of LAST WEEK's rows are:")
-  print(new_mastersheet_rows[seq(1,4),])
-  
-  # match_table <- dbReadTable(con, "mastersheet")   # equivalent to SELECT * FROM "mastersheet"
-  # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
-  
-  seven_day_4drs<-dbReadTable(con, "4DR_init")
-  #print("... first four current 4DRs are:")
-  #print(current_4drs[c(1:4),])
   
   # # Format data and sort-by date
-  new_mastersheet_rows$date_time <- ymd_hms(new_mastersheet_rows$date_time) #Convert to lubridate date/time format
-  new_mastersheet_rows <- new_mastersheet_rows %>% arrange(date_time) #Sort table by date_time
+  all_rows$date_time <- ymd_hms(all_rows$date_time) #Convert to lubridate date/time format
+  all_rows <- all_rows %>% arrange(date_time) #Sort table by date_time
   
   # # Add Days of the Week:
-  new_mastersheet_rows$dow<-as.character(wday(new_mastersheet_rows$date_time, label=TRUE))
+  all_rows$dow<-as.character(wday(all_rows$date_time, label=TRUE))
   
-  # # Find number of games(=rows) in new_mastersheet_rows:
-  game_max<-nrow(new_mastersheet_rows)
+  # # Find number of games(=rows) in pre_seven_mastersheet_rows:
+  game_max<-nrow(all_rows)
   
   # # Create empty data.frame to store results in 'long' format (i.e. one row per player per game)
   match_table_long <- data.frame(ID=character(),
@@ -931,65 +762,107 @@ updateFx<-function(){
                                  court_rank=integer(),
                                  event_type=character(),
                                  stringsAsFactors = FALSE)
-
-
+  
+  
   # # Reformat to long format (see above) and store in match_table_long:
   for (i in 1:game_max){
-    row1<-new_mastersheet_rows[i,] %>%
+    row1<-all_rows[i,] %>%
       select(ID=p1,partner=p2,opp1=p3,opp2=p4,score_side=p1p2_score,score_opp=p3p4_score,score_method,
              location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
     row1$game<-i
-
-    row2<-new_mastersheet_rows[i,] %>%
+    
+    row2<-all_rows[i,] %>%
       select(ID=p2,partner=p1,opp1=p3,opp2=p4,score_side=p1p2_score,score_opp=p3p4_score,score_method,
              location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
     row2$game<-i
-
-    row3<-new_mastersheet_rows[i,] %>%
+    
+    row3<-all_rows[i,] %>%
       select(ID=p3,partner=p4,opp1=p1,opp2=p2,score_side=p3p4_score,score_opp=p1p2_score,score_method,
              location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
     row3$game<-i
-
-    row4<-new_mastersheet_rows[i,] %>%
+    
+    row4<-all_rows[i,] %>%
       select(ID=p4,partner=p3,opp1=p1,opp2=p2,score_side=p3p4_score,score_opp=p1p2_score,score_method,
              location,date_time=date_time,dow=dow,indoor,no_of_courts,court_rank,event_type)
     row4$game<-i
-
+    
     match_table_long<-bind_rows(match_table_long,row1,row2,row3,row4)
   }
-
+  
   # # Store list of all players in match_table_long:
   player_list<-unique(match_table_long$ID)
-
+  
+  print("Match-table-long, first four: ")
   print(match_table_long[c(1:4),])
-
-
+  
+  
   # ## 4DR Rank tables
   # # Create table of 4DR ranks with all players as 3.000:
   rank_table<-data.frame(ID=player_list,rank=3)
   #
   # # Merge with historical ranks to replace '3.000's where known
-  for(id in 1:nrow(seven_day_4drs)){
-    rank_table$rank[rank_table$ID %in% seven_day_4drs$name[id]] <- seven_day_4drs$rank[id]
+  for(id in 1:nrow(init_4drs)){
+    rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
   }
-
+  
   # # Ensure ranks are numeric
   rank_table$rank<-as.numeric(rank_table$rank)
   print("The ranks ...")
   print(rank_table[c(1:10),])
-
-
-  # ## Run 4DR calculation
+  
+  
+  # ## Run 4DR calculation to update WEEK OLD and OLDER data:
   fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init_4drs,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
   rank_table<-fourDR_returns$ranks
-  sequential_ranks<-fourDR_returns$seqRanks
+  # Convert seq ranks date back to DB table column names:
+  seq_ranks_tmp<-fourDR_returns$seqRanks
+  seq_rank_init_4drs<-data.frame(name=seq_ranks_tmp$ID,
+                                 rank=seq_ranks_tmp$rank4dr,
+                                 date_time=seq_ranks_tmp$date_time)
+  
   print("New ranks ...")
   print(rank_table[c(1:10),])
+  
+  #### Update 4DR_init table FOR THIS FILTER BY DATE <= 7d ago
+  # ## UPSERT ranks:
+  rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
+  #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
+  
+  #### Update seq_ranks_init table
+  # ## REPLACE sequential ranks:
+  # seq_ranks_tmp<-data.frame(name=sequential_ranks$ID,
+  #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
+  #                           date_time=sequential_ranks$date_time)
+  # db_replace_table("sequential_ranks",seq_ranks_tmp)
+  # 
+  new_seq_ranks<-seq_rank_init_4drs[seq_rank_init_4drs$date_time>init_4DR_update_date,] # Only seq ranks since last update
+  
+  ####
+  print("Rank rows to be added to seq_ranks_init: ")
+  print(new_seq_ranks[1:10,])
   print("Sequential ranks ...")
-  print(sequential_ranks[sequential_ranks$ID=="George Tackley",])
+  print(new_seq_ranks[new_seq_ranks$ID=="George Tackley",])
+  #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
+  ####
   
+  # ## REPLACE match_table_long:
+  # db_replace_table("match_table_long",match_table_long)
   
+  # UPDATE the '4DR_init_updated' date (to the "seven_days_date") in the parameter table ('update_dates' table):
+  param_name<-"table_4DR_init_updated"
+  new_ts<-as.POSIXct(seven_days_date)
   
+  sql <- "
+          UPDATE update_dates
+          SET parameter_date = $1
+          WHERE parameter_name = $2
+          RETURNING parameter_name, parameter_date;
+        "
+  
+  updated <- dbGetQuery(con, sql, params = list(new_ts, param_name))
+  
+  print("These values were updated in the DB: ...")
+  print(updated)
   
   # ## UPSERT ranks:
   # rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
