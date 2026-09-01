@@ -796,7 +796,7 @@ updateFx<-function(){
   # match_table <- dbReadTable(con, "mastersheet")   # equivalent to SELECT * FROM "mastersheet"
   # init_4dr_table<-dbReadTable(con, "4DR_initialiser")
   
-  #current_4drs<-dbReadTable(con, "4DR_current")
+  seven_day_4drs<-dbReadTable(con, "init_4drs")
   #print("... first four current 4DRs are:")
   #print(current_4drs[c(1:4),])
   
@@ -860,19 +860,19 @@ updateFx<-function(){
   print(match_table_long[c(1:4),])
 
 
-  # # ## 4DR Rank tables
-  # # # Create table of 4DR ranks with all players as 3.000:
-  # rank_table<-data.frame(ID=player_list,rank=3)
-  # #
-  # # # Merge with historical ranks to replace '3.000's where known
-  # for(id in 1:nrow(current_4drs)){
-  #   rank_table$rank[rank_table$ID %in% current_4drs$name[id]] <- current_4drs$rank[id]
-  # }
-  # 
-  # # # Ensure ranks are numeric
-  # rank_table$rank<-as.numeric(rank_table$rank)
-  # print("The ranks ...")
-  # print(rank_table[c(1:10),])
+  # ## 4DR Rank tables
+  # # Create table of 4DR ranks with all players as 3.000:
+  rank_table<-data.frame(ID=player_list,rank=3)
+  #
+  # # Merge with historical ranks to replace '3.000's where known
+  for(id in 1:nrow(seven_day_4drs)){
+    rank_table$rank[rank_table$ID %in% seven_day_4drs$name[id]] <- seven_day_4drs$rank[id]
+  }
+
+  # # Ensure ranks are numeric
+  rank_table$rank<-as.numeric(rank_table$rank)
+  print("The ranks ...")
+  print(rank_table[c(1:10),])
 
 
   # ## Run 4DR calculation
@@ -881,6 +881,8 @@ updateFx<-function(){
   sequential_ranks<-fourDR_returns$seqRanks
   print("New ranks ...")
   print(rank_table[c(1:10),])
+  print("Sequential ranks ...")
+  print(sequential_ranks[c(1:20),])
   
   
   
