@@ -706,7 +706,7 @@ updateFx<-function(){
   
   # To make the init rank table, just use the seq_rank_table, filter by date, group by name, and use max date per rank
   rank_table_init<-
-    seq_ranks[seq_ranks$date_time<=seven_days_date,] %>% group_by(name) %>% 
+    seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>% group_by(name) %>% 
     summarise(date_time = max(date_time))
   print("First four in NEW generated init 4DRs ... ")
   print(rank_table_init[c(1:4),])
