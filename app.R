@@ -716,7 +716,8 @@ updateFx<-function(){
     seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>% group_by(name) %>% 
     filter(date_time == max(date_time))
   print("First four in NEW generated init 4DRs ... ")
-  print(rank_table_init[c(1:4),])
+  ordered_tmp<-rank_table_init[order(name),]
+  print(ordered_tmp[c(1:4),])
   
   # Days since latest 7-day ago update:
   print("Time between latest update and one week ago ... ")
