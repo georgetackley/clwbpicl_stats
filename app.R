@@ -652,12 +652,27 @@ updateFx<-function(){
   }
   
   # NEED TO UPDATE THE 4DR_init table here
-  # AS WELL as the 4DR_init date (to the "seven_days_date+(24*60*60)-1") in the parameter table
-  # Then run update from date after 7 days before, i.e. seven_days_date+(24*60*60)+1:
+  
+  
+  # AS WELL as UPDATE the 4DR_init date (to the "seven_days_date") in the parameter table
+  param_name<-"table_4DR_init_updated"
+  new_ts<-as.POSIXct(seven_days_date)
+  
+  sql <- "
+          UPDATE update_dates
+          SET parameter_date = $1
+          WHERE parameter_name = $2
+          RETURNING parameter_name, parameter_date;
+        "
+  
+  updated <- dbGetQuery(con, sql, params = list(new_ts, param_name))
+  
+  print("These values were updated in the DB: ...")
+  print(updated)
 }
 
 currentFx<-function(){
-  ## RUN update of 4DRs from last week's data:
+  ## RUN update of 4DRs from 'seven_days_date' onwards ... might be best to place the date variables outside the updateFx and currentFx calls
   print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
   #cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
