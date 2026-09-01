@@ -823,7 +823,12 @@ updateFx<-function(){
     # ## Run 4DR calculation
     fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init_4drs,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
     rank_table<-fourDR_returns$ranks
-    seq_rank_init_4drs<-fourDR_returns$seqRanks
+    # Convert seq ranks date back to DB table column names:
+    seq_ranks_tmp<-fourDR_returns$seqRanks
+    seq_rank_init_4drs<-data.frame(name=seq_ranks_tmp$ID,
+                                   rank=seq_ranks_tmp$rank4dr,
+                                   date_time<-seq_ranks_tmp$date_time)
+    
     print("New ranks ...")
     print(rank_table[c(1:10),])
     
