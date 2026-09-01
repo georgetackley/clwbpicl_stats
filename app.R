@@ -622,15 +622,15 @@ updateFx<-function(){
   print("Date a week ago ...")
   print(seven_days_date)
   
-  # Compare seven days ago date with 4DR init latest update date:
-  if (as.Date(init_4DR_update_date)<as.Date(seven_days_date)){
+  # Compare seven days ago date with '4DR init' latest update date:
+  if (init_4DR_update_date<seven_days_date){
     print("Updated longer ago than 7 days ... ")
     print(paste0(seven_days_date-init_4DR_update_date,"d to be exact!"))
     
-    # Run update SQL for 4DR init up to 23:59 on seven_days_date and save 4DR init values
+    # Process update SQL for any rows between the '4DR init' last update date and 7 days ago
     print("Loading un-updated rows from 'mastersheet' table ...")
     date_begin <- init_4DR_update_date
-    date_end <- seven_days_date+(24*60*60)-1
+    date_end <- seven_days_date
     print("Beginning and end cut-off dates ...")
     print(date_begin)
     print(date_end)
@@ -654,12 +654,14 @@ updateFx<-function(){
   # NEED TO UPDATE THE 4DR_init table here
   # AS WELL as the 4DR_init date (to the "seven_days_date+(24*60*60)-1") in the parameter table
   # Then run update from date after 7 days before, i.e. seven_days_date+(24*60*60)+1:
-  
+}
+
+currentFx<-function(){
   ## RUN update of 4DRs from last week's data:
   print("Loading recent rows from 'mastersheet' table ...")
   ## Load limited table from db:
   #cutoff <- as.POSIXct("2026-06-20 00:00:00", tz = "UTC")
-  cutoff_date <- seven_days_date+(24*60*60)+1
+  cutoff_date <- seven_days_date+1 # Adds one second
   print("Cut-off date ...")
   print(cutoff_date)
   
@@ -785,6 +787,7 @@ updateFx<-function(){
   
   ### Don't forget to update the date parameters table!
 }
+
 #updateFx()
 
 ## app.R ##
