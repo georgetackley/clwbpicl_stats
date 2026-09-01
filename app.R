@@ -414,9 +414,9 @@ fourDRCalc_zeroSum<-function(rank_table,seq_rank_table,game_max,match_table_long
   fx_rank_table<-rank_table
   
   ## Initialise table to collect sequential 4DR ranks:
-  #sequential_ranks<-data.frame(ID=character(),rank4dr=numeric(),date_time=ymd_hms(),
-  #                             stringsAsFactors=FALSE)
-  sequential_ranks<-data.frame(ID=seq_rank_table$name,rank4dr=seq_rank_table$rank,date_time=seq_rank_table$date_time)
+  sequential_ranks<-data.frame(ID=seq_rank_table$name,
+                               rank4dr=seq_rank_table$rank,
+                               date_time=seq_rank_table$date_time)
   
   for (i in 1:game_max){
     # Create tmp copy of rank table for function:
@@ -828,22 +828,27 @@ updateFx<-function(){
     print(rank_table[c(1:10),])
     
     #### Update 4DR_init table
-    #### Update seq_ranks_init table
-    
     # ## UPSERT ranks:
-    # rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
-    # db_upsert("4DR_current",rank_table,c("name","rank"),"name")
-    # 
+    rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
+    db_upsert("4DR_init",rank_table,c("name","rank"),"name")
+    
+    #### Update seq_ranks_init table
     # ## REPLACE sequential ranks:
     # seq_ranks_tmp<-data.frame(name=sequential_ranks$ID,
     #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
     #                           date_time=sequential_ranks$date_time)
     # db_replace_table("sequential_ranks",seq_ranks_tmp)
     # 
+    new_seq_ranks<-seq_rank_init_4drs[seq_rank_init_4drs$date_time>init_4DR_update_date,] # Only seq ranks since last update
+    
+    print("Rank rows to be added to seq_ranks_init: ")
+    print(new_seq_ranks[1:10,])
+    #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
+    
     # ## REPLACE match_table_long:
     # db_replace_table("match_table_long",match_table_long)
     
-    # UPDATE the 4DR_init date (to the "seven_days_date") in the parameter table:
+    # UPDATE the '4DR_init_updated' date (to the "seven_days_date") in the parameter table ('update_dates' table):
     param_name<-"table_4DR_init_updated"
     new_ts<-as.POSIXct(seven_days_date)
     
