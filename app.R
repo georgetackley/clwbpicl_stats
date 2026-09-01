@@ -826,9 +826,9 @@ updateFx<-function(){
   print(rank_table[c(1:10),])
   
   #### Update 4DR_init table FOR THIS FILTER BY DATE <= 7d ago
-  if(nows(all_rows[all_rows$date_time<seven_days_date,]) > 0){
+  if(nrow(all_rows[all_rows$date_time<seven_days_date,]) > 0){
     print("There are some pre-rows to upload ...")
-    print(nows(all_rows[all_rows$date_time<seven_days_date,]))
+    print(nrow(all_rows[all_rows$date_time<seven_days_date,]))
   }
   rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
