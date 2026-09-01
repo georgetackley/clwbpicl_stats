@@ -716,7 +716,7 @@ updateFx<-function(){
   print("Time between latest update and one week ago ... ")
   print(seven_days_date)
   print(init_4DR_update_date)
-  print(paste0(seven_days_date-init_4DR_update_date,"d (to be exact!)"))
+  print(seven_days_date-init_4DR_update_date)
   
   ### Load all relevant data
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
