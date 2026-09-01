@@ -850,7 +850,7 @@ updateFx<-function(){
   #                           date_time=sequential_ranks$date_time)
   # db_replace_table("sequential_ranks",seq_ranks_tmp)
   # 
-  new_seq_ranks<-seq_rank_init[seq_rank_inits$date_time>init_4DR_update_date,] # Only seq ranks since last update
+  new_seq_ranks<-seq_rank_init[seq_rank_init$date_time>init_4DR_update_date,] # Only seq ranks since last update
   
   ####
   print("Rank rows to be added to seq_ranks_init: ")
