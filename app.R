@@ -690,19 +690,20 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
-  # Make various date variables
+  ## DATE variables:
+  # Current and 7d dates:
   current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
   seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
   
-  ### Finds earliest date of 7d ago vs. latest 7d+ old update
-  ## NB this date will never be less than 7d
-  earliest_date<-min(c(seven_days_date,init_4DR_update_date))
-  
-  # Load latest 4DR-init update date (this is always AT LEAST 7d ago):
+  # Latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
   print("Latest 4DR-init update date: ")
   init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
   print(init_4DR_update_date)
+  
+  ### Finds earliest date of 7d ago vs. latest 7d+ old update
+  ## NB this date will never be less than 7d
+  earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
   seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ##
