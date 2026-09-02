@@ -693,10 +693,10 @@ updateFx<-function(){
   # Make various date variables
   current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
   seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
-  print("Current date ...")
-  print(current_date)
-  print("Date a week ago ...")
-  print(seven_days_date)
+  
+  ### Finds earliest date of 7d ago vs. latest 7d+ old update
+  ## NB this date will never be less than 7d
+  earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   
   # Load latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
@@ -704,36 +704,22 @@ updateFx<-function(){
   init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
   print(init_4DR_update_date)
   
-  # Load initialiser 4DR tables (these are always calculated from complete data AT LEAST 7d ago):
-  init_4drs_OLD<-dbReadTable(con, "4DR_init") #SEE BELOW - now created from seq-rank
-  current_4drs_UNUSED<-dbReadTable(con, "4DR_current") #SEE BELOW - now created from seq-rank
-  seq_rank_init<-dbReadTable(con, "seq_ranks_init")
-  print("First ten current 4DRs ... ")
-  ordered_tmp<-current_4drs_UNUSED[order(current_4drs_UNUSED$name),]
-  print(ordered_tmp[c(1:10),])
-  print("First four sequential 4DRs (deprecated) ... ")
-  print(seq_rank_init[c(1:4),])
+  # Load sequential ranks table (NB '4dr_init' table not needed)
+  seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ##
+  seq_ranks_init<-seq_ranks[seq_ranks$date_time <= earliest_date,]
   
-  # To make the init rank table, just use the seq_rank_table, filter by date, group by name, and use max date per rank
+  ## Create init_4drs table
+  ## Uses seq_rank_table, filtered by date (at least 7d ago), grouped by name, filtered by max date
   init_4drs<-
-    seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>% group_by(name) %>%
+    seq_rank_init %>% group_by(name) %>%
     filter(date_time == max(date_time))
   print("First ten in NEW generated init 4DRs ... ")
   ordered_tmp<-init_4drs[order(init_4drs$name),]
   print(ordered_tmp[c(1:10),])
   
-  # Days since latest 7-day ago update:
-  print("Time between latest update and one week ago ... ")
-  print(seven_days_date)
-  print(init_4DR_update_date)
-  print(seven_days_date-init_4DR_update_date)
-  
-  ### Load all relevant data
-  earliest_date<-min(c(seven_days_date,init_4DR_update_date))
-  print("Loading all relevant data 'mastersheet' table ...")
+  ## Load mastersheet data from DB
+  print("Loading'mastersheet' table rows ...")
   date_begin <- earliest_date
-  print("Beginning and end cut-off dates ...")
-  print(date_begin)
   
   sql <- "
             SELECT *
@@ -747,17 +733,17 @@ updateFx<-function(){
     params = list(date_begin)
   )
   
-  # # Format data and sort-by date
+  ## Format date and sort-by date
   all_rows$date_time <- ymd_hms(all_rows$date_time) #Convert to lubridate date/time format
   all_rows <- all_rows %>% arrange(date_time) #Sort table by date_time
   
-  # # Add Days of the Week:
+  ## Add Days of the Week:
   all_rows$dow<-as.character(wday(all_rows$date_time, label=TRUE))
   
-  # # Find number of games(=rows) in pre_seven_mastersheet_rows:
+  ## Find number of games(=rows):
   game_max<-nrow(all_rows)
   
-  # # Create empty data.frame to store results in 'long' format (i.e. one row per player per game)
+  ## Create empty data.frame to store results in 'long' format (i.e. one row per player per game)
   match_table_long <- data.frame(ID=character(),
                                  date_time=as.Date(character()), #update to 'date_time' 19032026
                                  dow=character(),
@@ -776,7 +762,7 @@ updateFx<-function(){
                                  stringsAsFactors = FALSE)
   
   
-  # # Reformat to long format (see above) and store in match_table_long:
+  ## Reformat to long format (see above) and store in match_table_long:
   for (i in 1:game_max){
     row1<-all_rows[i,] %>%
       select(ID=p1,partner=p2,opp1=p3,opp2=p4,score_side=p1p2_score,score_opp=p3p4_score,score_method,
@@ -801,39 +787,43 @@ updateFx<-function(){
     match_table_long<-bind_rows(match_table_long,row1,row2,row3,row4)
   }
   
-  # # Store list of all players in match_table_long:
+  ## Store list of all players found in match_table_long:
   player_list<-unique(match_table_long$ID)
   
-  print("Match-table-long, first four: ")
-  print(match_table_long[c(1:4),])
-  
-  
-  # ## 4DR Rank tables
-  # # Create table of 4DR ranks with all players as 3.000:
+  ### 4DR initialiser table (=rank_table)
+  ## Create table of 4DR ranks with all players as 3.000:
   rank_table<-data.frame(ID=player_list,rank=3)
-  #
-  # # Merge with historical ranks to replace '3.000's where known
+
+  ## Merge with 'historical'init_4drs' to replace '3.000's where known
   for(id in 1:nrow(init_4drs)){
     rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
   }
   
-  # # Ensure ranks are numeric
+  ## Ensure ranks are numeric
   rank_table$rank<-as.numeric(rank_table$rank)
   print("The ranks ...")
   print(rank_table[c(1:10),])
   
-  
-  # ## Run 4DR calculation to update WEEK OLD and OLDER data:
+  # ## Run 4DR calculation to update from latest update date (='earliest_date'):
   fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
   rank_table<-fourDR_returns$ranks
-  # Convert seq ranks date back to DB table column names:
+  
+  # Convert seq ranks date back to DB-compatible table column names:
   seq_ranks_tmp<-fourDR_returns$seqRanks
   seq_ranks<-data.frame(name=seq_ranks_tmp$ID,
                                  rank=seq_ranks_tmp$rank4dr,
                                  date_time=seq_ranks_tmp$date_time)
   
-  print("New ranks ...")
-  print(rank_table[c(1:10),])
+  # DEBUG: Check FINAL ranking vs. highest seq rank output from 4DR-calc:
+  print("New FINAL ranks check ...")
+  ordered_tmp<-rank_table[order(rank_table$name),]
+  print(ordered_tmp[c(1:10),])
+  seq_ranks_check<-
+    seq_ranks %>% group_by(name) %>%
+    filter(date_time == max(date_time))
+  print("New seq ranks check of maximum ranks ... ")
+  ordered_tmp<-seq_ranks_check[order(seq_ranks_check$name),]
+  print(ordered_tmp[c(1:10),])
   
   rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   
@@ -854,12 +844,12 @@ updateFx<-function(){
   #                           date_time=sequential_ranks$date_time)
   # db_replace_table("sequential_ranks",seq_ranks_tmp)
   # 
-  new_seq_ranks<-seq_rank_init[seq_rank_init$date_time>init_4DR_update_date,] # Only seq ranks since last update
+  new_seq_ranks<-seq_ranks[seq_ranks$date_time>earliest_date,] # Only seq ranks since last update
   
   ####
   print("Rank rows to be added to seq_ranks_init: ")
   print(new_seq_ranks[1:10,])
-  print("Sequential ranks ...")
+  print("New sequential ranks GT ...")
   print(new_seq_ranks[new_seq_ranks$ID=="George Tackley",])
   #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
   ####
