@@ -709,7 +709,7 @@ updateFx<-function(){
   current_4drs_UNUSED<-dbReadTable(con, "4DR_current") #SEE BELOW - now created from seq-rank
   seq_rank_init<-dbReadTable(con, "seq_ranks_init")
   print("First ten current 4DRs ... ")
-  ordered_tmp<-init_4drs_OLD[order(init_4drs_OLD$name),]
+  ordered_tmp<-current_4drs_UNUSED[order(current_4drs_UNUSED$name),]
   print(ordered_tmp[c(1:10),])
   print("First four sequential 4DRs (deprecated) ... ")
   print(seq_rank_init[c(1:4),])
