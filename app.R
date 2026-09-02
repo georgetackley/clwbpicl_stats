@@ -690,6 +690,15 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
+  ### THIS function essentially loads all mastersheet data from AT LEAST a week ago
+  ### The latest update date ('table_4DR_init_updated') is always stored after an update
+  ### at the date of the update MINUS 7ds.
+  ### The sequential ranks upto 'table_4DR_init_updated' date are considered 'stable' and
+  ### any data from more recent dates are processed with data from this date as the starting point.
+  
+  ### TO-DO: consider what we want to upload as the master-sheet for the general stats page 
+  ### ... as it stands it will only summarise the most recent games.
+  
   ## DATE variables:
   # Current and 7d dates:
   current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
@@ -701,8 +710,8 @@ updateFx<-function(){
   init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
   print(init_4DR_update_date)
   
-  ### Finds earliest date of 7d ago vs. latest 7d+ old update
-  ## NB this date will never be less than 7d
+  # Find earliest of 7d ago vs. latest 7d+ update date 
+  # (the latter should ALWAYS be earlier, i.e. always >7d, so this step probably not needed)
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
@@ -829,16 +838,18 @@ updateFx<-function(){
   rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   
   
+  #### Deprecated - just need to update the DB sequential ranks table with any dates > 'earliest date'
   #### Update 4DR_init table FOR THIS FILTER BY DATE <= 7d ago
-  if(nrow(all_rows[all_rows$date_time<seven_days_date,]) > 0){
-    print("There are some pre-rows to upload ...")
-    print(nrow(all_rows[all_rows$date_time<seven_days_date,]))
-    #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
-  }
+  #if(nrow(all_rows[all_rows$date_time<seven_days_date,]) > 0){
+  #  print("There are some pre-rows to upload ...")
+  #  print(nrow(all_rows[all_rows$date_time<seven_days_date,]))
+  #  #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
+  #}
+  ####
   
   
-  
-  #### Update seq_ranks_init table
+  ## TO-DO! ##
+  #### Update seq_ranks_init table with any seq ranks > 'earliest_date'
   # ## REPLACE sequential ranks:
   # seq_ranks_tmp<-data.frame(name=sequential_ranks$ID,
   #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
