@@ -848,8 +848,9 @@ updateFx<-function(){
   new_seq_ranks<-seq_ranks[seq_ranks$date_time>earliest_date,] # Only seq ranks since last update
   
   ####
-  print("Rank rows to be added to seq_ranks_init: ")
-  print(new_seq_ranks[1:10,])
+  print("Rank rows to be added to seq_ranks table: ")
+  ordered_tmp<-new_seq_ranks[order(new_seq_ranks$name),]
+  print(ordered_tmp[c(1:10),])
   print("New sequential ranks GT ...")
   print(new_seq_ranks[new_seq_ranks$ID=="George Tackley",])
   #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
