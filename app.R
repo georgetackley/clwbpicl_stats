@@ -712,7 +712,7 @@ updateFx<-function(){
   ## Create init_4drs table
   ## Uses seq_rank_table, filtered by date (at least 7d ago), grouped by name, filtered by max date
   init_4drs<-
-    seq_rank_init %>% group_by(name) %>%
+    seq_ranks_init %>% group_by(name) %>%
     filter(date_time == max(date_time))
   print("First ten in NEW generated init 4DRs ... ")
   ordered_tmp<-init_4drs[order(init_4drs$name),]
@@ -806,7 +806,7 @@ updateFx<-function(){
   print(rank_table[c(1:10),])
   
   # ## Run 4DR calculation to update from latest update date (='earliest_date'):
-  fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_rank_init,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
+  fourDR_returns<-fourDRCalc_zeroSum(rank_table,seq_ranks_init,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
   rank_table<-fourDR_returns$ranks
   
   # Convert seq ranks date back to DB-compatible table column names:
