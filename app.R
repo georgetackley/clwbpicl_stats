@@ -707,16 +707,16 @@ updateFx<-function(){
   # Load initialiser 4DR tables (these are always calculated from complete data AT LEAST 7d ago):
   init_4drs_OLD<-dbReadTable(con, "4DR_init") #SEE BELOW - now created from seq-rank
   seq_rank_init<-dbReadTable(con, "seq_ranks_init")
-  print("First four init 4DRs ... ")
-  print(init_4drs_OLD[c(1:4),])
+  print("First ten init 4DRs ... ")
+  print(init_4drs_OLD[c(1:10),])
   print("First four sequential 4DRs (deprecated) ... ")
-  print(seq_rank_init[c(1:10),])
+  print(seq_rank_init[c(1:4),])
   
   # To make the init rank table, just use the seq_rank_table, filter by date, group by name, and use max date per rank
   init_4drs<-
-    seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>% group_by(name) %>% 
+    seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>%
     filter(date_time == max(date_time))
-  print("First four in NEW generated init 4DRs ... ")
+  print("First ten in NEW generated init 4DRs ... ")
   ordered_tmp<-init_4drs[order(init_4drs$name),]
   print(ordered_tmp[c(1:10),])
   
