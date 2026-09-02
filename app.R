@@ -697,27 +697,28 @@ updateFx<-function(){
   print(current_date)
   print("Date a week ago ...")
   print(seven_days_date)
-  # Load latest 4DR-init update date:
+  
+  # Load latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
   print("Latest 4DR-init update date: ")
   init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
   print(init_4DR_update_date)
   
-  # Load initialiser 4DR tables:
-  init_4drs<-dbReadTable(con, "4DR_init")
+  # Load initialiser 4DR tables (these are always calculated from complete data AT LEAST 7d ago):
+  init_4drs_OLD<-dbReadTable(con, "4DR_init") #SEE BELOW - now created from seq-rank
   seq_rank_init<-dbReadTable(con, "seq_ranks_init")
   print("First four init 4DRs ... ")
-  print(init_4drs[c(1:4),])
-  print("First four sequential 4DRs ... ")
-  print(seq_rank_init[c(1:4),])
+  print(init_4drs_OLD[c(1:4),])
+  print("First four sequential 4DRs (deprecated) ... ")
+  print(seq_rank_init[c(1:10),])
   
   # To make the init rank table, just use the seq_rank_table, filter by date, group by name, and use max date per rank
-  rank_table_init<-
+  init_4drs<-
     seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>% group_by(name) %>% 
     filter(date_time == max(date_time))
   print("First four in NEW generated init 4DRs ... ")
-  ordered_tmp<-rank_table_init[order(rank_table_init$name),]
-  print(ordered_tmp[c(1:4),])
+  ordered_tmp<-init_4drs[order(init_4drs$name),]
+  print(ordered_tmp[c(1:10),])
   
   # Days since latest 7-day ago update:
   print("Time between latest update and one week ago ... ")
