@@ -817,7 +817,7 @@ updateFx<-function(){
   
   # DEBUG: Check FINAL ranking vs. highest seq rank output from 4DR-calc:
   print("New FINAL ranks check ...")
-  ordered_tmp<-rank_table[order(rank_table$name),]
+  ordered_tmp<-rank_table[order(rank_table$ID),]
   print(ordered_tmp[c(1:10),])
   seq_ranks_check<-
     seq_ranks %>% group_by(name) %>%
