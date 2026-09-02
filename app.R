@@ -706,9 +706,11 @@ updateFx<-function(){
   
   # Load initialiser 4DR tables (these are always calculated from complete data AT LEAST 7d ago):
   init_4drs_OLD<-dbReadTable(con, "4DR_init") #SEE BELOW - now created from seq-rank
+  current_4drs_UNUSED<-dbReadTable(con, "4DR_current") #SEE BELOW - now created from seq-rank
   seq_rank_init<-dbReadTable(con, "seq_ranks_init")
   print("First ten init 4DRs ... ")
-  print(init_4drs_OLD[c(1:10),])
+  ordered_tmp<-init_4drs_OLD[order(init_4drs_OLD$name),]
+  print(ordered_tmp[c(1:10),])
   print("First four sequential 4DRs (deprecated) ... ")
   print(seq_rank_init[c(1:4),])
   
