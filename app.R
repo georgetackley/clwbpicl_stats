@@ -708,7 +708,7 @@ updateFx<-function(){
   init_4drs_OLD<-dbReadTable(con, "4DR_init") #SEE BELOW - now created from seq-rank
   current_4drs_UNUSED<-dbReadTable(con, "4DR_current") #SEE BELOW - now created from seq-rank
   seq_rank_init<-dbReadTable(con, "seq_ranks_init")
-  print("First ten init 4DRs ... ")
+  print("First ten current 4DRs ... ")
   ordered_tmp<-init_4drs_OLD[order(init_4drs_OLD$name),]
   print(ordered_tmp[c(1:10),])
   print("First four sequential 4DRs (deprecated) ... ")
@@ -716,7 +716,7 @@ updateFx<-function(){
   
   # To make the init rank table, just use the seq_rank_table, filter by date, group by name, and use max date per rank
   init_4drs<-
-    seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>%
+    seq_rank_init[seq_rank_init$date_time<=seven_days_date,] %>% group_by(name) %>%
     filter(date_time == max(date_time))
   print("First ten in NEW generated init 4DRs ... ")
   ordered_tmp<-init_4drs[order(init_4drs$name),]
