@@ -858,6 +858,39 @@ updateFx<-function(){
   # 
   new_seq_ranks<-seq_ranks[seq_ranks$date_time>earliest_date,] # Only seq ranks since last update
   
+  print("The R data.frame 'new_seq_ranks's columns are:")
+  print(colnames(new_seq_ranks))
+  
+  n <- nrow(new_seq_ranks)
+  
+  if (n == 0L) {
+    stop("new_seq_ranks contains no rows to insert.") # Just generates msg
+  }
+  
+  deleted_rows <- 0L
+  
+  DBI::dbWithTransaction(con, {
+    # Remove rows newer than earliest_date
+    deleted_rows <<- DBI::dbExecute(
+      con,
+      paste0(
+        'DELETE FROM "public"."seq_ranks_init" ',
+        'WHERE "date_time" > $1;'
+      ),
+      params = list(earliest_date)
+    )
+    
+    # Insert the new data
+    DBI::dbAppendTable(
+      con,
+      DBI::Id(schema = "public", table = "seq_ranks_init"),
+      new_seq_ranks
+    )
+  })
+  
+  message("Deleted rows: ", deleted_rows)
+  message("Inserted rows: ", n)
+  
   ####
   print("Rank rows to be added to seq_ranks table: ")
   ordered_tmp<-new_seq_ranks[order(new_seq_ranks$name),]
