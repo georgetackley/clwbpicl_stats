@@ -833,7 +833,6 @@ updateFx<-function(){
   current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
   #seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
   seven_days_date<-current_date-weeks(1)
-  general_stats_date<-current_date-months(3)
   
   # Latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
@@ -867,8 +866,7 @@ updateFx<-function(){
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
-  date_begin <- general_stats_date
-  #date_begin <- earliest_date
+  date_begin <- earliest_date
   sql <- "
             SELECT *
             FROM mastersheet
@@ -934,14 +932,6 @@ updateFx<-function(){
     
     match_table_long<-bind_rows(match_table_long,row1,row2,row3,row4)
   }
-  
-  # Split match_table_long into general stats table and 4DR update table:
-  match_table_long_all<-match_table_long
-  print("Match table ALL N rows:")
-  print(nrow(match_table_long_all))
-  match_table_long<-match_table_long[match_table_long$date_time >= earliest_date,]
-  print("Match table long N rows:")
-  print(nrow(match_table_long))
   
   ## Store list of all players found in match_table_long:
   player_list<-unique(match_table_long$ID)
