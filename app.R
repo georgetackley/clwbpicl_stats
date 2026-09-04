@@ -713,6 +713,8 @@ updateFx<-function(){
   # Find earliest of 7d ago vs. latest 7d+ update date 
   # (the latter should ALWAYS be earlier, i.e. always >7d, so this step probably not needed)
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
+  print("Earliest date is:")
+  print(earliest_date)
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
   seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ##
