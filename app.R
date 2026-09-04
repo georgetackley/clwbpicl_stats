@@ -881,6 +881,8 @@ updateFx<-function(){
       ),
       params = list(earliest_date)
     )
+    deleted_rows <- 10L
+    deleted_rows <<- 20L
     
     # Insert the new data
     #DBI::dbAppendTable(
