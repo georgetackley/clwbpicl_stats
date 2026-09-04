@@ -883,11 +883,11 @@ updateFx<-function(){
     )
     
     # Insert the new data
-    DBI::dbAppendTable(
-      con,
-      DBI::Id(schema = "public", table = "seq_ranks_init"),
-      new_seq_ranks
-    )
+    #DBI::dbAppendTable(
+    #  con,
+    #  DBI::Id(schema = "public", table = "seq_ranks_init"),
+    #  new_seq_ranks
+    #)
   })
   
   message("Deleted rows: ", deleted_rows)
