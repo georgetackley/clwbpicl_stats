@@ -690,10 +690,10 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
-  ### THIS function essentially loads all mastersheet data from AT LEAST a week ago
-  ### The latest update date ('table_4DR_init_updated') is always stored after an update
+  ### THIS function essentially loads all mastersheet data from AT LEAST a week ago.
+  ### The latest update date ('seq_ranks_latestUpdate_minus7d') is always stored after an update
   ### at the date of the update MINUS 7ds.
-  ### The sequential ranks upto 'table_4DR_init_updated' date are considered 'stable' and
+  ### The sequential ranks upto 'seq_ranks_latestUpdate_minus7d' date are considered 'stable' and
   ### any data from more recent dates are processed with data from this date as the starting point.
   
   ### TO-DO: consider what we want to upload as the master-sheet for the general stats page 
@@ -707,7 +707,7 @@ updateFx<-function(){
   # Latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
   print("Latest 4DR-init update date: ")
-  init_4DR_update_date<-init_date[init_date$parameter_name=="table_4DR_init_updated",]$parameter_date
+  init_4DR_update_date<-init_date[init_date$parameter_name=="seq_ranks_latestUpdate_minus7d",]$parameter_date
   print(init_4DR_update_date)
   
   # Find earliest of 7d ago vs. latest 7d+ update date 
@@ -840,15 +840,6 @@ updateFx<-function(){
   rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   
   
-  #### Deprecated - just need to update the DB sequential ranks table with any dates > 'earliest date'
-  #### Update 4DR_init table FOR THIS FILTER BY DATE <= 7d ago
-  #if(nrow(all_rows[all_rows$date_time<seven_days_date,]) > 0){
-  #  print("There are some pre-rows to upload ...")
-  #  print(nrow(all_rows[all_rows$date_time<seven_days_date,]))
-  #  #db_upsert("4DR_init",rank_table,c("name","rank"),"name")
-  #}
-  ####
-  
   
   ## TO-DO! ##
   #### Update seq_ranks_init table with any seq ranks > 'earliest_date'
@@ -864,24 +855,7 @@ updateFx<-function(){
   print(colnames(new_seq_ranks))
   
   
-  # ### DEBUG
-  # debug_result <- DBI::dbGetQuery(
-  #   con,
-  #   paste0(
-  #     'SELECT ',
-  #     'COUNT(*) AS total_rows, ',
-  #     'COUNT(*) FILTER (WHERE "date_time" > $1) AS rows_to_delete, ',
-  #     'MIN("date_time") AS earliest_db_date_time, ',
-  #     'MAX("date_time") AS latest_db_date_time ',
-  #     'FROM "public"."seq_ranks_init";'
-  #   ),
-  #   params = list(earliest_date)
-  # )
-  # 
-  # print(debug_result)
-  # print(earliest_date)
-  # print(class(earliest_date))
-  # ###
+
   
   ### Delete rows in seq_ranks_init newer than latest update date
   ### Insert newly calculated rows from latest update date onwards
@@ -929,7 +903,7 @@ updateFx<-function(){
   # db_replace_table("match_table_long",match_table_long)
   
   # UPDATE the '4DR_init_updated' date (to the "seven_days_date") in the parameter table ('update_dates' table):
-  param_name<-"table_4DR_init_updated"
+  param_name<-"seq_ranks_latestUpdate_minus7d"
   new_ts<-as.POSIXct(seven_days_date)
   
   sql <- "
