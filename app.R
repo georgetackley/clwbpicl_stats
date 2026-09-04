@@ -831,7 +831,9 @@ updateFx<-function(){
   ## DATE variables:
   # Current and 7d dates:
   current_date<-as.POSIXct(Sys.time()) # NB this will retrieve a BST not UTC tz time/date ... will 50% of the time therefore be 1-hour out ... don't think this will matter ...
-  seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
+  #seven_days_date<-current_date-604800 # ... minus the no. of seconds in a week!
+  seven_days_date<-current_date-weeks(1)
+  general_stats_date<-current_date-months(3)
   
   # Latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
@@ -865,7 +867,8 @@ updateFx<-function(){
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
-  date_begin <- earliest_date
+  date_begin <- general_stats_date
+  #date_begin <- earliest_date
   sql <- "
             SELECT *
             FROM mastersheet
@@ -931,6 +934,10 @@ updateFx<-function(){
     
     match_table_long<-bind_rows(match_table_long,row1,row2,row3,row4)
   }
+  
+  # Split match_table_long into general stats table and 4DR update table:
+  match_table_long_all<-match_table_long
+  match_table_long<-match_table_long[match_table_long$date_time >= earliest_date,]
   
   ## Store list of all players found in match_table_long:
   player_list<-unique(match_table_long$ID)
@@ -1188,9 +1195,10 @@ TMPcurrentFx<-function(){
   #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
   #                           date_time=sequential_ranks$date_time)
   # db_replace_table("sequential_ranks",seq_ranks_tmp)
-  # 
+
+  
   # ## REPLACE match_table_long:
-  # db_replace_table("match_table_long",match_table_long)
+  # db_replace_table("match_table_long",match_table_long_all)
   return(NULL)
   
   ### Don't forget to update the date parameters table!
