@@ -558,9 +558,15 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       ## Calculate depreciation value:
       depreciation<-1
       if (player_name %in% sequential_ranks$ID){
-        print(paste0("4DR calc: player ", player_name, " found in hx sequential ranks."))
+        ## DEBUG:
+        if (player_name == "Jan Wilkins"){
+          print(paste0("4DR calc: player ", player_name, " found in hx sequential ranks."))
+        }
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
-        print(paste0("4DR calc: most recent date is ", most_recent_date, "."))
+        ## DEBUG:
+        if (player_name == "Jan Wilkins"){
+          print(paste0("4DR calc: most recent date is ", most_recent_date, "."))
+        }
         date_diff<-as.numeric(difftime(game_date,most_recent_date,units = 'secs'))
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
           depreciation<-as.integer(date_diff/604800)*0.02 # i.e. 0.02 * number of weeks in date_diff rounded down to nearest whole week
@@ -854,9 +860,8 @@ updateFx<-function(){
   init_4drs<-
     seq_ranks_init %>% group_by(name) %>%
     filter(date_time == max(date_time))
-  print("First ten in NEW generated init 4DRs ... ")
-  ordered_tmp<-init_4drs[order(init_4drs$name),]
-  print(ordered_tmp[c(1:10),])
+  print("Jan Wilkins NEW generated init 4DRs ... ")
+  print(init_4drs[init_4drs$name == "Jan Wilkins",])
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
