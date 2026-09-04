@@ -556,7 +556,7 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       game_date<-game_table$date_time[row_num]
       
       ## Calculate depreciation value:
-      depreciation<-1
+      depreciation<-0 # default is NO (=zero) depreciation
       if (player_name %in% sequential_ranks$ID){
         ## DEBUG:
         if (player_name == "Jan Wilkins"){
