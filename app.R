@@ -525,8 +525,9 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
     for (row_num in 1:4){
       ## Assign pre-game ranks to players for each row (player):
       ## NB it is important that for each game the PRE-GAME rank is used for each player to calculate
-      ## ranks, thus avoiding the situation whereby a player's rank is calculated and that NEW rank
-      ## is used within the same game to calculate another players rank.
+      ## ALL players' ranks, thus avoiding the situation whereby a player's rank is calculated and that
+      ## NEW rank is used within the same game to calculate another players rank. Hence tmp_rank_table is
+      # kept outside of this loop and only fx_rank_table is updated within this loop.
       
       if (row_num == 1) {
         own_rank<-player_one_rank
@@ -554,28 +555,30 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       player_name<-game_table$ID[row_num]
       game_date<-game_table$date_time[row_num]
       
+      ## Calculate depreciation value:
       depreciation<-1
       if (player_name %in% sequential_ranks$ID){
         print(paste0("4DR calc: player ", player_name, " found in hx sequential ranks."))
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
         print(paste0("4DR calc: most recent date is ", most_recent_date, "."))
-        date_diff<-difftime(game_date,most_recent_date,units = 'secs')
+        date_diff<-as.numeric(difftime(game_date,most_recent_date,units = 'secs'))
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
-          depreciation<-as.integer(date_diff/604800)*0.02 # i.e. 0.02 * number of weeks
+          depreciation<-as.integer(date_diff/604800)*0.02 # i.e. 0.02 * number of weeks in date_diff rounded down to nearest whole week
           if (depreciation>0.2){depreciation=0.2} # Set maximum drop to 20%
           print(paste0("4DR calc: Depreciation for ",player_name," is ",round(depreciation,2),"."))
         }
       }
-      ###
       
+      ## Calculate new rank for WINNER
       if (game_table$score_side[row_num]>game_table$score_opp[row_num]) { # i.e. player won
         prob<-exp((opponent_1_rank+opponent_2_rank)/scalar_adj)/
           (exp((own_rank+partner_rank)/scalar_adj)+exp((opponent_1_rank+opponent_2_rank)/scalar_adj))
         points_diff<-(game_table$score_opp[row_num]/
                         game_table$score_side[row_num])*11 #alternative points diff, normalised to 11-pt game [8/5/25]
         points_awarded<-(0.1*prob)-(0.001*points_diff)
-        ## Calculate new rank
-        new_rank<-tmp_rank_table[tmp_rank_table$ID==game_table$ID[row_num],2] + points_awarded
+        ## Calculate new rank: depreciate AND add points awarded
+        new_rank<-(tmp_rank_table[tmp_rank_table$ID==game_table$ID[row_num],2] * (1-depreciation)) +
+          points_awarded
         ## Set floor of 1.000 for ranks [Update 25022026)]:
         if(new_rank < 1) new_rank<-1
         ## Assign new rank to rank_table
@@ -586,14 +589,17 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
                                                        rank4dr = fx_rank_table[fx_rank_table$ID==game_table$ID[row_num],2],
                                                        date_time=ymd_hms(game_table$date_time[row_num])) # added ymd_hms 20032026
         
+        ## Calculate new rank for LOSER
       } else if (game_table$score_side[row_num]<game_table$score_opp[row_num]) { # i.e. player lost
         prob<-exp((own_rank+partner_rank)/scalar_adj)/
           (exp((own_rank+partner_rank)/scalar_adj)+exp((opponent_1_rank+opponent_2_rank)/scalar_adj))
         points_diff<-(game_table$score_side[row_num]/
                         game_table$score_opp[row_num])*11 #alternative points diff, normalised to 11-pt game [8/5/25]
         points_awarded<-(-0.1*prob)+(0.001*points_diff)
+        ## Calculate new rank: depreciate AND add points awarded (demerited)
+        new_rank<-(tmp_rank_table[tmp_rank_table$ID==game_table$ID[row_num],2] * (1-depreciation)) +
+          points_awarded
         ## Set floor of 1.000 for ranks [Update 25022026)]:
-        new_rank<-tmp_rank_table[tmp_rank_table$ID==game_table$ID[row_num],2] + points_awarded
         if(new_rank < 1) new_rank<-1
         fx_rank_table[fx_rank_table$ID==game_table$ID[row_num],2]<-new_rank
         
