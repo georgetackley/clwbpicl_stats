@@ -967,10 +967,9 @@ updateFx<-function(){
   print("New FINAL Jan Wilkings ranks check ...")
   print(rank_table[rank_table$ID == "Jan Wilkins",])
   seq_ranks_check<-
-    seq_ranks %>% group_by(name) %>%
-    filter(date_time == max(date_time))
+    seq_ranks %>% filter(name == "Jan Wilkins")
   print("New seq ranks check of Jan Wilkins maximum ranks ... ")
-  print(seq_ranks_check[seq_ranks_check$name=="Jan Wilkins",])
+  print(seq_ranks_check)
   
   #rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   
