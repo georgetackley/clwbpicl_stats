@@ -962,6 +962,7 @@ updateFx<-function(){
                                  rank=seq_ranks_tmp$rank4dr,
                                  date_time=seq_ranks_tmp$date_time)
   
+  
   # DEBUG: Check FINAL ranking vs. highest seq rank output from 4DR-calc:
   print("New FINAL Jan Wilkings ranks check ...")
   print(rank_table[rank_table$ID == "Jan Wilkins",])
