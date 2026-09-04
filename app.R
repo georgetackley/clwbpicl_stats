@@ -873,7 +873,7 @@ updateFx<-function(){
   
   DBI::dbWithTransaction(con, {
     # Remove rows newer than earliest_date
-    deleted_rows <<- DBI::dbExecute(
+    deleted_rows <- DBI::dbExecute(
       con,
       paste0(
         'DELETE FROM "public"."seq_ranks_init" ',
@@ -881,15 +881,13 @@ updateFx<-function(){
       ),
       params = list(earliest_date)
     )
-    deleted_rows <- 10L
-    deleted_rows <<- 20L
     
     # Insert the new data
-    #DBI::dbAppendTable(
-    #  con,
-    #  DBI::Id(schema = "public", table = "seq_ranks_init"),
-    #  new_seq_ranks
-    #)
+    DBI::dbAppendTable(
+      con,
+      DBI::Id(schema = "public", table = "seq_ranks_init"),
+      new_seq_ranks
+    )
   })
   
   message("Deleted rows: ", deleted_rows)
