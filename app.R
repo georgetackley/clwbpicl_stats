@@ -559,7 +559,7 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
         print(paste0("4DR calc: player ", player_name, " found in hx sequential ranks."))
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
         print(paste0("4DR calc: most recent date is ", most_recent_date, "."))
-        date_diff<-game_date-most_recent_date
+        date_diff<-difftime(game_date,most_recent_date,units = 'secs')
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
           depreciation<-as.integer(date_diff/604800)*0.02 # i.e. 0.02 * number of weeks
           if (depreciation>0.2){depreciation=0.2} # Set maximum drop to 20%
