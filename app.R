@@ -938,10 +938,10 @@ updateFx<-function(){
   # Split match_table_long into general stats table and 4DR update table:
   match_table_long_all<-match_table_long
   print("Match table ALL N rows:")
-  print[nrow(match_table_long_all)]
+  print(nrow(match_table_long_all))
   match_table_long<-match_table_long[match_table_long$date_time >= earliest_date,]
   print("Match table long N rows:")
-  print[nrow(match_table_long)]
+  print(nrow(match_table_long))
   
   ## Store list of all players found in match_table_long:
   player_list<-unique(match_table_long$ID)
