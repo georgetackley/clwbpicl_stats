@@ -556,14 +556,14 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       
       depreciation<-1
       if (player_name %in% sequential_ranks$ID){
-        print0("4DR calc: player ", player_name, " found in hx sequential ranks.")
+        print(paste0("4DR calc: player ", player_name, " found in hx sequential ranks."))
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
-        print0("4DR calc: most recent date is ", most_recent_date, ".")
+        print(paste0("4DR calc: most recent date is ", most_recent_date, "."))
         date_diff<-game_date-most_recent_date
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
           depreciation<-as.integer(date_diff/604800)*0.02 # i.e. 0.02 * number of weeks
           if (depreciation>0.2){depreciation=0.2} # Set maximum drop to 20%
-          print0("4DR calc: Depreciation for ",player_name," is ",depreciation,".")
+          print(paste0("4DR calc: Depreciation for ",player_name," is ",depreciation,"."))
         }
       }
       ###
