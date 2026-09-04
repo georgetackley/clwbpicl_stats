@@ -864,24 +864,24 @@ updateFx<-function(){
   print(colnames(new_seq_ranks))
   
   
-  ### DEBUG
-  debug_result <- DBI::dbGetQuery(
-    con,
-    paste0(
-      'SELECT ',
-      'COUNT(*) AS total_rows, ',
-      'COUNT(*) FILTER (WHERE "date_time" > $1) AS rows_to_delete, ',
-      'MIN("date_time") AS earliest_db_date_time, ',
-      'MAX("date_time") AS latest_db_date_time ',
-      'FROM "public"."seq_ranks_init";'
-    ),
-    params = list(earliest_date)
-  )
-  
-  print(debug_result)
-  print(earliest_date)
-  print(class(earliest_date))
-  ###
+  # ### DEBUG
+  # debug_result <- DBI::dbGetQuery(
+  #   con,
+  #   paste0(
+  #     'SELECT ',
+  #     'COUNT(*) AS total_rows, ',
+  #     'COUNT(*) FILTER (WHERE "date_time" > $1) AS rows_to_delete, ',
+  #     'MIN("date_time") AS earliest_db_date_time, ',
+  #     'MAX("date_time") AS latest_db_date_time ',
+  #     'FROM "public"."seq_ranks_init";'
+  #   ),
+  #   params = list(earliest_date)
+  # )
+  # 
+  # print(debug_result)
+  # print(earliest_date)
+  # print(class(earliest_date))
+  # ###
   
   ### Delete rows in seq_ranks_init newer than latest update date
   ### Insert newly calculated rows from latest update date onwards
