@@ -690,14 +690,20 @@ db_replace_table<-function(db_target_table,df){
 con<-connectDB()
 
 updateFx<-function(){
-  ### THIS function essentially loads all mastersheet data from AT LEAST a week ago.
-  ### The latest update date ('seq_ranks_latestUpdate_minus7d') is always stored after an update
-  ### at the date of the update MINUS 7ds.
-  ### The sequential ranks upto 'seq_ranks_latestUpdate_minus7d' date are considered 'stable' and
-  ### any data from more recent dates are processed with data from this date as the starting point.
-  
+  ### -----------------------------------------------------
+  ### THIS function loads all mastersheet data from AT LEAST a week ago.
+  ###
+  ### The latest update date ('seq_ranks_latestUpdate_minus7d') is stored/updated after an update
+  ### and is set to the date of the update (=current date) MINUS 7 days.
+  ###
+  ### Thus, for the purpose of routine updates, all data before the 'seq_ranks_latestUpdate_minus7d'
+  ### date is considered static / stable / unchangeable and only data after this date are
+  ### processed; i.e. this date as the starting point.
+  ### 
+  ### -----------------------------------------------------
   ### TO-DO: consider what we want to upload as the master-sheet for the general stats page 
-  ### ... as it stands it will only summarise the most recent games.
+  ### ... as it stands it will only summarise the most recent games. Perhaps last three months?
+  ### ... this should perhaps be done on the STATS page ... with an option to select earliest time-point?
   
   ## DATE variables:
   # Current and 7d dates:
@@ -706,11 +712,17 @@ updateFx<-function(){
   
   # Latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
-  print("Latest 4DR-init update date: ")
   init_4DR_update_date<-init_date[init_date$parameter_name=="seq_ranks_latestUpdate_minus7d",]$parameter_date
+  print("Latest 4DR-init update date: ")
   print(init_4DR_update_date)
   
-  # Find earliest of 7d ago vs. latest 7d+ update date 
+  # Load 'starter' 4DRs - i.e. anyone who has bee assigned a value other than the default 3.000 (see below)
+  starter_4drs<-dbReadTable(con, "4DR_init")
+  print("The starter 4DRs are:")
+  print(starter_4drs[1:20,])
+  
+  # Find earliest of 7d ago vs. latest 7d+ update date
+  # *** ADD IN here a FORCE EARLY UPDATE date ***
   # (the latter should ALWAYS be earlier, i.e. always >7d, so this step probably not needed)
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   print("Earliest date is:")
@@ -718,10 +730,10 @@ updateFx<-function(){
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
   seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ##
-  seq_ranks_init<-seq_ranks[seq_ranks$date_time <= earliest_date,]
+  seq_ranks_init<-seq_ranks[seq_ranks$date_time <= earliest_date,] # Stores the initialising data, i.e. the 'stable' data to initiate calculations; this is ALWAYS >= 7d ago
   
   ## Create init_4drs table
-  ## Uses seq_rank_table, filtered by date (at least 7d ago), grouped by name, filtered by max date
+  ## Uses seq_rank_init, grouped by name, filtered by max date, to find the max stable rank for each player
   init_4drs<-
     seq_ranks_init %>% group_by(name) %>%
     filter(date_time == max(date_time))
@@ -732,7 +744,6 @@ updateFx<-function(){
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
   date_begin <- earliest_date
-  
   sql <- "
             SELECT *
             FROM mastersheet
@@ -806,8 +817,11 @@ updateFx<-function(){
   ## Create table of 4DR ranks with all players as 3.000:
   rank_table<-data.frame(ID=player_list,rank=3)
 
-  ## Merge with 'historical'init_4drs' to replace '3.000's where known
+  ## Merge with 'historical'init_4drs' to replace '3.000's within either starter 4DRs
+  ## OR, where ranks have previoulsy been computed, with initial ranks (init_4drs)
+  ## I.e. "init" ranks usurp "starter" ranks which usurp "3.000" ranks.
   for(id in 1:nrow(init_4drs)){
+    rank_table$rank[rank_table$ID %in% starter_4drs$name[id]] <- starter_4drs$rank[id]
     rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
   }
   
