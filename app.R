@@ -949,8 +949,8 @@ updateFx<-function(){
   
   ## Ensure ranks are numeric
   rank_table$rank<-as.numeric(rank_table$rank)
-  print("The ranks ...")
-  print(rank_table[c(1:10),])
+  print("Jan Wilkins ranks ...")
+  print(rank_table[rank_table$ID == "Jan Wilkins",])
   
   ### Run 4DR calculation to update from latest update date (='earliest_date'):
   fourDR_returns<-fourDRCalc_zeroSum_depreciate(rank_table,seq_ranks_init,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
@@ -963,19 +963,15 @@ updateFx<-function(){
                                  date_time=seq_ranks_tmp$date_time)
   
   # DEBUG: Check FINAL ranking vs. highest seq rank output from 4DR-calc:
-  print("New FINAL ranks check ...")
-  ordered_tmp<-rank_table[order(rank_table$ID),]
-  print(ordered_tmp[c(1:10),])
+  print("New FINAL Jan Wilkings ranks check ...")
+  print(rank_table[rank_table$ID == "Jan Wilkins",])
   seq_ranks_check<-
     seq_ranks %>% group_by(name) %>%
     filter(date_time == max(date_time))
-  print("New seq ranks check of maximum ranks ... ")
-  ordered_tmp<-seq_ranks_check[order(seq_ranks_check$name),]
-  print(ordered_tmp[c(1:10),])
+  print("New seq ranks check of Jan Wilkins maximum ranks ... ")
+  print(seq_ranks_check[seq_ranks_check$name=="Jan Wilkins",])
   
-  rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
-  
-  
+  #rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
   
   ## TO-DO! ##
   #### Update seq_ranks_init table with any seq ranks > 'earliest_date'
