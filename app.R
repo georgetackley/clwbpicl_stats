@@ -853,7 +853,7 @@ updateFx<-function(){
   print(earliest_date)
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
-  seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ##
+  seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ## BUT REMEMBER TO ADD 'last_4dr_game' column ###
   seq_ranks_init<-seq_ranks[seq_ranks$date_time <= earliest_date,] # Stores the initialising data, i.e. the 'stable' data to initiate calculations; this is ALWAYS >= 7d ago
   
   ## Create init_4drs table
@@ -889,6 +889,7 @@ updateFx<-function(){
   ## Find number of games(=rows):
   game_max<-nrow(all_rows)
   
+  ### Make match_table_long
   ## Create empty data.frame to store results in 'long' format (i.e. one row per player per game)
   match_table_long <- data.frame(ID=character(),
                                  date_time=as.Date(character()), #update to 'date_time' 19032026
@@ -972,23 +973,9 @@ updateFx<-function(){
   print("New seq ranks check of Jan Wilkins maximum ranks ... ")
   print(seq_ranks_check)
   
-  #rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
-  
-  ## TO-DO! ##
-  #### Update seq_ranks_init table with any seq ranks > 'earliest_date'
-  # ## REPLACE sequential ranks:
-  # seq_ranks_tmp<-data.frame(name=sequential_ranks$ID,
-  #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
-  #                           date_time=sequential_ranks$date_time)
-  # db_replace_table("sequential_ranks",seq_ranks_tmp)
-  # 
+  # Store updated / re-processed ranks
   new_seq_ranks<-seq_ranks[seq_ranks$date_time>earliest_date,] # Only seq ranks since last update
   
-  print("The R data.frame 'new_seq_ranks's columns are:")
-  print(colnames(new_seq_ranks))
-  
-  
-
   
   ### Delete rows in seq_ranks_init newer than latest update date
   ### Insert newly calculated rows from latest update date onwards
@@ -998,7 +985,7 @@ updateFx<-function(){
   }
   deleted_rows <- 0L
   
-  DBI::dbWithTransaction(con, {
+  result <- DBI::dbWithTransaction(con, {
     # Remove rows newer than earliest_date
     deleted_rows <- DBI::dbExecute(
       con,
@@ -1010,32 +997,48 @@ updateFx<-function(){
     )
     
     # Insert the new data
-    DBI::dbAppendTable(
+    inserted_count <- DBI::dbAppendTable(
       con,
       DBI::Id(schema = "public", table = "seq_ranks_init"),
       new_seq_ranks
     )
+    
+    updated_count <- DBI::dbExecute(
+      con,
+      paste0(
+        'UPDATE "public"."seq_ranks_init" AS s ',
+        'SET "last_4dr_game" = latest."max_date_time" ',
+        'FROM ( ',
+        '  SELECT "name", MAX("date_time") AS "max_date_time" ',
+        '  FROM "public"."seq_ranks_init" ',
+        '  GROUP BY "name" ',
+        ') AS latest ',
+        'WHERE s."name" = latest."name";'
+      )
+    )
+    
+    list(
+      deleted_count = deleted_count,
+      inserted_count = inserted_count,
+      updated_count = updated_count
+    )
   })
+  
+  message("Deleted rows: ", result$deleted_count)
+  message("Inserted rows: ", result$inserted_count)
+  message("Updated rows: ", result$updated_count)
+  
+  ###
   
   message("Deleted rows: ", deleted_rows)
   message("Inserted rows: ", n)
   
-
   
-  
-  ####
-  print("Rank rows to be added to seq_ranks table: ")
-  ordered_tmp<-new_seq_ranks[order(new_seq_ranks$name),]
-  print(ordered_tmp[c(1:10),])
-  print("New sequential ranks GT ...")
-  print(new_seq_ranks[new_seq_ranks$ID=="George Tackley",])
-  #dbWriteTable(con, "seq_ranks_init", new_seq_ranks, append = TRUE, row.names = FALSE)
-  ####
-  
-  # ## REPLACE match_table_long:
+  # ## REPLACE match_table_long - to be done from stats website ? no-need to replace, just load last month/2/3 (user determined) live?
   # db_replace_table("match_table_long",match_table_long)
   
-  # UPDATE the '4DR_init_updated' date (to the "seven_days_date") in the parameter table ('update_dates' table):
+  # UPDATE the '4DR_init_updated' date (to the "seven_days_date") in the parameter table 
+  # (called 'update_dates' table in DB):
   param_name<-"seq_ranks_latestUpdate_minus7d"
   new_ts<-as.POSIXct(seven_days_date)
   
@@ -1048,21 +1051,6 @@ updateFx<-function(){
   
   updated <- dbGetQuery(con, sql, params = list(new_ts, param_name))
   
-  print("These values were updated in the DB: ...")
-  print(updated)
-  
-  # ## UPSERT ranks:
-  # rank_table$name<-rank_table$ID # Map ID to name for upsert - needs to match DB table
-  # db_upsert("4DR_current",rank_table,c("name","rank"),"name")
-  # 
-  # ## REPLACE sequential ranks:
-  # seq_ranks_tmp<-data.frame(name=sequential_ranks$ID,
-  #                           rank=sequential_ranks$rank4dr, # Map rank4dr to rank for upsert - needs to match DB table
-  #                           date_time=sequential_ranks$date_time)
-  # db_replace_table("sequential_ranks",seq_ranks_tmp)
-  # 
-  # ## REPLACE match_table_long:
-  # db_replace_table("match_table_long",match_table_long)
 }
 
 TMPcurrentFx<-function(){
