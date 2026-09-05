@@ -987,7 +987,7 @@ updateFx<-function(){
   
   result <- DBI::dbWithTransaction(con, {
     # Remove rows newer than earliest_date
-    deleted_rows <- DBI::dbExecute(
+    deleted_count <- DBI::dbExecute(
       con,
       paste0(
         'DELETE FROM "public"."seq_ranks_init" ',
