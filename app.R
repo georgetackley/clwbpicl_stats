@@ -574,6 +574,7 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
           print(paste0("4DR calc: Depreciation for ",player_name," is ",round(depreciation,2),"."))
         }
       }
+      ### NEED TO REMOVE ON LAUNCH! ###
       depreciation<-0
       
       ## Calculate new rank for WINNER
@@ -841,7 +842,7 @@ updateFx<-function(){
   print("Latest 4DR-init update date: ")
   print(init_4DR_update_date)
   
-  # Load 'starter' 4DRs - i.e. anyone who has bee assigned a value other than the default 3.000 (see below)
+  # Load 'starter' 4DRs - i.e. anyone who has been assigned a value other than the default 3.000 (see below)
   starter_4drs<-dbReadTable(con, "4DR_init")
   print("The starter 4DRs are:")
   print(starter_4drs[1:20,])
