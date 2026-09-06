@@ -574,6 +574,7 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
           print(paste0("4DR calc: Depreciation for ",player_name," is ",round(depreciation,2),"."))
         }
       }
+      depreciation<-0
       
       ## Calculate new rank for WINNER
       if (game_table$score_side[row_num]>game_table$score_opp[row_num]) { # i.e. player won
