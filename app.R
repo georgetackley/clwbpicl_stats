@@ -848,15 +848,7 @@ updateFx<-function(){
   print(earliest_date)
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
-  seq_ranks <- dbReadTable(
-    con,
-    Id(
-      schema = "public",
-      table = "sequential_ranks"
-    )
-  )
-  
-  #seq_ranks<-dbReadTable(con, "sequential_ranks") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ## BUT REMEMBER TO ADD 'last_4dr_game' column ###
+  seq_ranks<-dbReadTable(con, "sequential_ranks") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ## BUT REMEMBER TO ADD 'last_4dr_game' column ###
   seq_ranks_init<-seq_ranks[seq_ranks$date_time <= earliest_date,] # Stores the initialising data, i.e. the 'stable' data to initiate calculations; this is ALWAYS >= 7d ago
   
   ## Create init_4drs table
