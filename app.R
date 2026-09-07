@@ -558,15 +558,7 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       ## Calculate depreciation value:
       depreciation<-0 # default is NO (=zero) depreciation
       if (player_name %in% sequential_ranks$ID){
-        ## DEBUG:
-        if (player_name == "Jan Wilkins"){
-          print(paste0("4DR calc: player ", player_name, " found in hx sequential ranks."))
-        }
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
-        ## DEBUG:
-        if (player_name == "Jan Wilkins"){
-          print(paste0("4DR calc: most recent date is ", most_recent_date, "."))
-        }
         date_diff<-as.numeric(difftime(game_date,most_recent_date,units = 'secs'))
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
           depreciation<-as.integer(date_diff/604800)*0.02 # i.e. 0.02 * number of weeks in date_diff rounded down to nearest whole week
@@ -853,7 +845,7 @@ updateFx<-function(){
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   # *** ADD IN here a FORCE EARLY UPDATE date ***
   ### COMMENT OUT ON LAUNCH!!! ###
-  #earliest_date<-as.POSIXct("2026-01-08 12:00")
+  earliest_date<-as.POSIXct("2026-01-08 12:00")
   print("Earliest date is:")
   print(earliest_date)
   
@@ -1215,7 +1207,7 @@ ui <- page_fluid(
                   actionButton(
                     "update",
                     "Re-run Db Update"),
-                  p("Click once and wait 2-3 minutes for update ..."),
+                  p("Click once and wait - should take 15s - 2mins depending on update size ..."),
                   textOutput("time_string"),
                   align="center"),column(4))
   
