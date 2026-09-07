@@ -848,9 +848,11 @@ updateFx<-function(){
   print(starter_4drs[1:20,])
   
   # Find earliest of 7d ago vs. latest 7d+ update date
-  # *** ADD IN here a FORCE EARLY UPDATE date ***
   # (the latter should ALWAYS be earlier, i.e. always >7d, so this step probably not needed)
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
+  # *** ADD IN here a FORCE EARLY UPDATE date ***
+  ### COMMENT OUT ON LAUNCH!!! ###
+  earliest_date<-as.POSIXct("2026-01-08 12:00")
   print("Earliest date is:")
   print(earliest_date)
   
@@ -863,8 +865,8 @@ updateFx<-function(){
   init_4drs<-
     seq_ranks_init %>% group_by(name) %>%
     filter(date_time == max(date_time))
-  print("Jan Wilkins NEW generated init 4DRs ... ")
-  print(init_4drs[init_4drs$name == "Jan Wilkins",])
+  print("NEW generated initialising 4DRs ... ")
+  print(init_4drs[1:20,])
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
@@ -950,6 +952,8 @@ updateFx<-function(){
     rank_table$rank[rank_table$ID %in% starter_4drs$name[id]] <- starter_4drs$rank[id]
     rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
   }
+  print("NEW generated initialising 4DRs with starter and 3s included ... ")
+  print(init_4drs[1:40,])
   
   ## Ensure ranks are numeric
   rank_table$rank<-as.numeric(rank_table$rank)
