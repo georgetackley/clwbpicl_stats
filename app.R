@@ -566,8 +566,6 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
           print(paste0("4DR calc: Depreciation for ",player_name," is ",round(depreciation,2),"."))
         }
       }
-      ### NEED TO REMOVE ON LAUNCH! ###
-      depreciation<-0
       
       ## Calculate new rank for WINNER
       if (game_table$score_side[row_num]>game_table$score_opp[row_num]) { # i.e. player won
@@ -845,7 +843,7 @@ updateFx<-function(){
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   # *** ADD IN here a FORCE EARLY UPDATE date ***
   ### COMMENT OUT ON LAUNCH!!! ###
-  earliest_date<-as.POSIXct("2026-01-08 12:00")
+  #earliest_date<-as.POSIXct("2026-01-08 12:00")
   print("Earliest date is:")
   print(earliest_date)
   
