@@ -869,7 +869,10 @@ updateFx<-function(){
       filter(date_time == max(date_time))
     print("NEW generated initialising 4DRs ... ")
     print(init_4drs[1:20,])
-  } else {print("seq_ranks_init table is EMPTY")}
+  } else {
+    print("seq_ranks_init table is EMPTY")
+    init_4drs<-seq_ranks_init[0,] # Assign named but empty columns to init_4drs
+    }
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
