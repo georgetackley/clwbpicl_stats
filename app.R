@@ -848,7 +848,7 @@ updateFx<-function(){
   print(earliest_date)
   
   # Load sequential ranks table (NB '4dr_init' table not needed)
-  seq_ranks<-dbReadTable(con, "seq_ranks_init") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ## BUT REMEMBER TO ADD 'last_4dr_game' column ###
+  seq_ranks<-dbReadTable(con, "sequential_ranks") ## EVENTUALLY JUST LOAD SEQUENTIAL RANKS TABLE ## BUT REMEMBER TO ADD 'last_4dr_game' column ###
   seq_ranks_init<-seq_ranks[seq_ranks$date_time <= earliest_date,] # Stores the initialising data, i.e. the 'stable' data to initiate calculations; this is ALWAYS >= 7d ago
   
   ## Create init_4drs table
@@ -860,7 +860,7 @@ updateFx<-function(){
     print("NEW generated initialising 4DRs ... ")
     print(init_4drs[1:20,])
   } else {
-    print("seq_ranks_init table is EMPTY")
+    print("seq_ranks_init dataframe is EMPTY")
     init_4drs<-seq_ranks_init[0,] # Assign named but empty columns to init_4drs
   }
   
@@ -981,7 +981,7 @@ updateFx<-function(){
   new_seq_ranks<-seq_ranks[seq_ranks$date_time>earliest_date,] # Only seq ranks since last update
   
   
-  ### Delete rows in seq_ranks_init newer than latest update date
+  ### Delete rows in 'sequential_ranks' DB table newer than latest update date
   ### Insert newly calculated rows from latest update date onwards
   n <- nrow(new_seq_ranks)
   if (n == 0L) {
@@ -993,7 +993,7 @@ updateFx<-function(){
     deleted_count <- DBI::dbExecute(
       con,
       paste0(
-        'DELETE FROM "public"."seq_ranks_init" ',
+        'DELETE FROM "public"."sequential_ranks" ',
         'WHERE "date_time" > $1;'
       ),
       params = list(earliest_date)
@@ -1002,18 +1002,18 @@ updateFx<-function(){
     # Insert the new data
     inserted_count <- DBI::dbAppendTable(
       con,
-      DBI::Id(schema = "public", table = "seq_ranks_init"),
+      DBI::Id(schema = "public", table = "sequential_ranks"),
       new_seq_ranks
     )
     
     updated_count <- DBI::dbExecute(
       con,
       paste0(
-        'UPDATE "public"."seq_ranks_init" AS s ',
+        'UPDATE "public"."sequential_ranks" AS s ',
         'SET "last_4dr_game" = latest."max_date_time" ',
         'FROM ( ',
         '  SELECT "name", MAX("date_time") AS "max_date_time" ',
-        '  FROM "public"."seq_ranks_init" ',
+        '  FROM "public"."sequential_ranks" ',
         '  GROUP BY "name" ',
         ') AS latest ',
         'WHERE s."name" = latest."name";'
