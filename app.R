@@ -872,7 +872,7 @@ updateFx<-function(){
   } else {
     print("seq_ranks_init table is EMPTY")
     init_4drs<-seq_ranks_init[0,] # Assign named but empty columns to init_4drs
-    }
+  }
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
@@ -961,16 +961,16 @@ updateFx<-function(){
     rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
   }
   print("NEW generated initialising 4DRs with starter and 3s included ... ")
-  print(init_4drs[1:40,])
+  print(rank_table[1:40,])
   
   ## Ensure ranks are numeric
   rank_table$rank<-as.numeric(rank_table$rank)
-  print("Jan Wilkins ranks ...")
-  print(rank_table[rank_table$ID == "Jan Wilkins",])
   
   ### Run 4DR calculation to update from latest update date (='earliest_date'):
   fourDR_returns<-fourDRCalc_zeroSum_depreciate(rank_table,seq_ranks_init,game_max,match_table_long) #updated - zero sum version; simultaneous game calcs (not sequential for the 4 players); div by 3
   rank_table<-fourDR_returns$ranks
+  print("FINAL ranks that would originally have been used to update Current Ranks table ... ")
+  print(rank_table[1:40,])
   
   # Convert seq ranks date back to DB-compatible table column names:
   seq_ranks_tmp<-fourDR_returns$seqRanks
