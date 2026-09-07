@@ -838,7 +838,8 @@ updateFx<-function(){
   
   # Latest 4DR-init update date (this is always AT LEAST 7d ago):
   init_date<-dbReadTable(con, "update_dates") # Loads the param table that includes the latest 4DR init update date
-  init_4DR_update_date<-init_date[init_date$parameter_name=="seq_ranks_latestUpdate_minus7d",]$parameter_date
+  init_4DR_update_date<-
+    init_date[init_date$parameter_name=="seq_ranks_latestUpdate_minus7d",]$parameter_date
   print("Latest 4DR-init update date: ")
   print(init_4DR_update_date)
   
@@ -862,11 +863,13 @@ updateFx<-function(){
   
   ## Create init_4drs table
   ## Uses seq_rank_init, grouped by name, filtered by max date, to find the max stable rank for each player
-  init_4drs<-
-    seq_ranks_init %>% group_by(name) %>%
-    filter(date_time == max(date_time))
-  print("NEW generated initialising 4DRs ... ")
-  print(init_4drs[1:20,])
+  if(nrow(seq_ranks_init>0)){
+    init_4drs<-
+      seq_ranks_init %>% group_by(name) %>%
+      filter(date_time == max(date_time))
+    print("NEW generated initialising 4DRs ... ")
+    print(init_4drs[1:20,])
+  } else {print("seq_ranks_init table is EMPTY")}
   
   ## Load mastersheet data from DB
   print("Loading'mastersheet' table rows ...")
@@ -948,8 +951,10 @@ updateFx<-function(){
   ## Merge with 'historical'init_4drs' to replace '3.000's within either starter 4DRs
   ## OR, where ranks have previoulsy been computed, with initial ranks (init_4drs)
   ## I.e. "init" ranks usurp "starter" ranks which usurp "3.000" ranks.
-  for(id in 1:nrow(init_4drs)){
+  for(id in 1:nrow(starter_4drs)){
     rank_table$rank[rank_table$ID %in% starter_4drs$name[id]] <- starter_4drs$rank[id]
+  }
+  for(id in 1:nrow(init_4drs)){
     rank_table$rank[rank_table$ID %in% init_4drs$name[id]] <- init_4drs$rank[id]
   }
   print("NEW generated initialising 4DRs with starter and 3s included ... ")
@@ -989,7 +994,6 @@ updateFx<-function(){
   if (n == 0L) {
     stop("new_seq_ranks contains no rows to insert.") # Just generates msg
   }
-  deleted_rows <- 0L
   
   result <- DBI::dbWithTransaction(con, {
     # Remove rows newer than earliest_date
@@ -1033,11 +1037,6 @@ updateFx<-function(){
   message("Deleted rows: ", result$deleted_count)
   message("Inserted rows: ", result$inserted_count)
   message("Updated rows: ", result$updated_count)
-  
-  ###
-  
-  message("Deleted rows: ", deleted_rows)
-  message("Inserted rows: ", n)
   
   
   # ## REPLACE match_table_long - to be done from stats website ? no-need to replace, just load last month/2/3 (user determined) live?
