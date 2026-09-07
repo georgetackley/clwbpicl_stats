@@ -853,7 +853,7 @@ updateFx<-function(){
   earliest_date<-min(c(seven_days_date,init_4DR_update_date))
   # *** ADD IN here a FORCE EARLY UPDATE date ***
   ### COMMENT OUT ON LAUNCH!!! ###
-  earliest_date<-as.POSIXct("2026-01-08 12:00")
+  #earliest_date<-as.POSIXct("2026-01-08 12:00")
   print("Earliest date is:")
   print(earliest_date)
   
