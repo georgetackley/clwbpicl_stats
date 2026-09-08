@@ -559,6 +559,8 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       depreciation<-0 # default is NO (=zero) depreciation
       if (player_name %in% sequential_ranks$ID){
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
+        start_deprection_date<-as.POSIXct("2026-09-01 00:01") # SET THIS to determine when score depreciation occurs from
+        if(most_recent_date<start_deprection_date){most_recent_date<-start_deprection_date}
         date_diff<-as.numeric(difftime(game_date,most_recent_date,units = 'secs'))
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
           depreciation<-as.integer(date_diff/604800)*0.01 # i.e. 0.01 (=1%) * number of weeks in date_diff rounded down to nearest whole week
