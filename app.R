@@ -554,13 +554,16 @@ fourDRCalc_zeroSum_depreciate<-function(rank_table,seq_rank_table,game_max,match
       scalar_adj<-1 # Number to divide side ranks by to balance probability of a win
       player_name<-game_table$ID[row_num]
       game_date<-game_table$date_time[row_num]
+      game_date<-as.Date(game_date) # strips time stamp
+      game_date<-as.POSIXct(game_date)+1 # replaces time stamp with 00:00:01 - this gives most generous date-difference, i.e. people won't be penalised for playing 2 weeks and 1 hour later!
+      
       
       ## Calculate depreciation value:
       depreciation<-0 # default is NO (=zero) depreciation
       if (player_name %in% sequential_ranks$ID){
         most_recent_date<-max(sequential_ranks[sequential_ranks$ID==player_name,]$date_time)
-        start_deprection_date<-as.POSIXct("2026-09-01 00:01") # SET THIS to determine when score depreciation occurs from
-        if(most_recent_date<start_deprection_date){most_recent_date<-start_deprection_date}
+        start_depreciation_date<-as.POSIXct("2026-09-01 00:01") # SET THIS to determine when score depreciation occurs from
+        if(most_recent_date<start_depreciation_date){most_recent_date<-start_depreciation_date}
         date_diff<-as.numeric(difftime(game_date,most_recent_date,units = 'secs'))
         if (date_diff>(2 * 604800)){ # i.e. if the most recent rank is >2weeks ago (in seconds!)
           depreciation<-as.integer(date_diff/604800)*0.01 # i.e. 0.01 (=1%) * number of weeks in date_diff rounded down to nearest whole week
@@ -945,7 +948,7 @@ updateFx<-function(){
 
   ## Merge with 'historical'init_4drs' to replace '3.000's within either starter 4DRs
   ## OR, where ranks have previoulsy been computed, with initial ranks (init_4drs)
-  ## I.e. "init" ranks usurp "starter" ranks which usurp "3.000" ranks.
+  ## I.e. "init" ranks usurp "starter" ranks; "starter" ranks which usurp "3.000" ranks.
   for(id in 1:nrow(starter_4drs)){
     rank_table$rank[rank_table$ID %in% starter_4drs$name[id]] <- starter_4drs$rank[id]
   }
