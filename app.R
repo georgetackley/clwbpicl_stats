@@ -15,6 +15,7 @@ library('formattable')
 library(DBI)
 library(RPostgres)
 
+# Test R
 
 # Functions:
 makeStatTable<-function(stat_data){
